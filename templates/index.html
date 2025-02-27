@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scope Creator AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1200px;
+            flex: 1;
+        }
+        .card {
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            background-color: white;
+            border: none;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -12px;
+            margin-left: -12px;
+        }
+        .col-md-8, .col-md-4 {
+            padding: 0 12px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .btn-primary {
+            border-radius: 10px;
+            padding: 10px 30px;
+        }
+        #initialForm, #modelSelector {
+            height: calc(100% - 1rem);
+            margin-bottom: 1rem;
+        }
+        #apiKeySection {
+            margin: 0;
+            padding: 1rem 1.5rem;
+        }
+        .model-selector {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            height: 100%;
+        }
+        h1.text-center {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        h5.mb-3 {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        #apiKeySection .form-control {
+            flex: 1;
+            margin: 0 1rem;
+        }
+        #apiKeySection .btn-primary {
+            min-width: 100px;
+        }
+        #apiKeySection label {
+            white-space: nowrap;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        #loadingSpinner {
+            display: none;
+        }
+        #scopeContent {
+            white-space: pre-wrap;
+        }
+        .toolbar {
+            margin: 10px 0;
+        }
+        .toolbar button {
+            margin-right: 10px;
+        }
+        #editableScope {
+            width: 100%;
+            min-height: 500px;
+        }
+        .section-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .question-container {
+            margin-bottom: 20px;
+        }
+        .answer-input {
+            margin-top: 10px;
+        }
+        .why-needed {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        /* Markdown Styling */
+        #scopeContent h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eee;
+        }
+        #scopeContent h2 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        #scopeContent hr {
+            margin: 2rem 0;
+            border-color: #eee;
+        }
+        #scopeContent table {
+            width: 100%;
+            margin: 1rem 0;
+            border-collapse: collapse;
+        }
+        #scopeContent table th,
+        #scopeContent table td {
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+        }
+        #scopeContent table th {
+            background-color: #f8f9fa;
+        }
+        #scopeContent strong {
+            color: #333;
+        }
+        #scopeContent ul, #scopeContent ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        #scopeContent li {
+            margin-bottom: 0.5rem;
+        }
+        #scopeContent blockquote {
+            border-left: 4px solid #ccc;
+            margin: 1rem 0;
+            padding-left: 1rem;
+            color: #666;
+        }
+        .btn-toolbar {
+            gap: 10px;
+        }
+        .preview-mode {
+            position: relative;
+            padding-top: 3rem;
+        }
+        .preview-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 0 0 0 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .form-check {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .form-check:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .form-check-label {
+            display: flex;
+            flex-direction: column;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        .model-name {
+            display: flex;
+            align-items: center;
+        }
+        .badge {
+            font-weight: normal;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .pricing-info {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-left: 0.5rem;
+            display: block;
+            margin-top: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Scope Creator AI</h1>
+        
+        <div class="row">
+            <!-- Left column: Initial Project Info Form -->
+            <div class="col-md-8">
+                <div id="initialForm" class="card p-4">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">Project Name</label>
+                        <input type="text" class="form-control" id="projectName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transcription" class="form-label">Meeting Transcription (Optional)</label>
+                        <textarea class="form-control" id="transcription" rows="13"></textarea>
+                    </div>
+                    <button onclick="startAnalysis()" class="btn btn-primary">Start Analysis</button>
+                </div>
+            </div>
+
+            <!-- Right column: Model Selector -->
+            <div class="col-md-4">
+                <div id="modelSelector" class="card p-4">
+                    <h5 class="mb-3">Select AI Model</h5>
+                    <div class="model-selector">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="claude" value="anthropic/claude-3.7-sonnet:paid">
+                            <label class="form-check-label" for="claude">
+                                <div class="model-name">
+                                    Claude 3.7 Sonnet
+                                    <span class="badge bg-warning text-dark ms-2">Paid</span>
+                                </div>
+                                <span class="pricing-info">$3/M input tokens, $15/M output tokens</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="o3mini" value="openai/o3-mini-high:paid">
+                            <label class="form-check-label" for="o3mini">
+                                <div class="model-name">
+                                    o3 Mini High
+                                    <span class="badge bg-warning text-dark ms-2">Paid</span>
+                                </div>
+                                <span class="pricing-info">$1.1/M input tokens, $4.4/M output tokens</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="phi4" value="microsoft/phi-4:paid">
+                            <label class="form-check-label" for="phi4">
+                                <div class="model-name">
+                                    Phi-4
+                                    <span class="badge bg-warning text-dark ms-2">Paid</span>
+                                </div>
+                                <span class="pricing-info">$0.07/M input tokens, $0.14/M output tokens</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="deepseek" value="deepseek/deepseek-r1:free">
+                            <label class="form-check-label" for="deepseek">
+                                <div class="model-name">
+                                    DeepSeek R1
+                                    <span class="badge bg-secondary ms-2">Free</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="gemini" value="google/gemini-2.0-pro-exp-02-05:free" checked>
+                            <label class="form-check-label" for="gemini">
+                                <div class="model-name">
+                                    Gemini Pro
+                                    <span class="badge bg-secondary ms-2">Free</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="llama" value="meta-llama/llama-3.3-70b-instruct:free">
+                            <label class="form-check-label" for="llama">
+                                <div class="model-name">
+                                    Llama 3 70B
+                                    <span class="badge bg-secondary ms-2">Free</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="qwen" value="qwen/qwen2.5-vl-72b-instruct:free">
+                            <label class="form-check-label" for="qwen">
+                                <div class="model-name">
+                                    Qwen 2.5 72B
+                                    <span class="badge bg-secondary ms-2">Free</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="aiModel" id="mistral" value="mistralai/mistral-nemo:free">
+                            <label class="form-check-label" for="mistral">
+                                <div class="model-name">
+                                    Mistral Nemo
+                                    <span class="badge bg-secondary ms-2">Free</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full width API Key Input -->
+            <div class="col-12">
+                <div id="apiKeySection" class="card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1 me-3">
+                            <label for="apiKey" class="form-label mb-0 me-3">OpenRouter API Key:</label>
+                            <input type="password" class="form-control" id="apiKey" placeholder="Enter your OpenRouter API key">
+                        </div>
+                        <button onclick="saveApiKey()" class="btn btn-primary">Save Key</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Analysis Results -->
+        <div id="analysisResults" class="card p-4" style="display: none;">
+            <h3>Project Analysis</h3>
+            <div id="projectType" class="mb-3"></div>
+            <div id="relevantSections" class="mb-3"></div>
+            <div id="questions"></div>
+            <button onclick="submitAnswers()" class="btn btn-primary mt-3">Submit Answers</button>
+        </div>
+
+        <!-- Follow-up Questions -->
+        <div id="followUpQuestions" class="card p-4" style="display: none;">
+            <h3>Additional Information Needed</h3>
+            <div id="followUpQuestionsContent"></div>
+            <button onclick="submitFollowUp()" class="btn btn-primary mt-3">Submit Answers</button>
+        </div>
+
+        <!-- Generated Scope -->
+        <div id="generatedScope" class="card p-4" style="display: none;">
+            <div class="toolbar">
+                <button onclick="editScope()" class="btn btn-secondary">Edit</button>
+                <button onclick="copyScope()" class="btn btn-secondary">Copy</button>
+                <button onclick="startOver()" class="btn btn-secondary">Start Over</button>
+            </div>
+            <div id="scopeContent"></div>
+            <textarea id="editableScope" style="display: none;"></textarea>
+            <div id="editButtons" style="display: none;">
+                <button onclick="saveEdit()" class="btn btn-primary mt-3 me-2">Save</button>
+                <button onclick="cancelEdit()" class="btn btn-secondary mt-3">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="text-center mt-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div id="loadingText" class="mt-2">Processing...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentInfo = {};
+        let projectName = '';
+
+        // Add debug logging for page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            console.log('Initial form visibility:', document.getElementById('initialForm').style.display);
+            console.log('Main content visibility:', document.getElementById('mainContent').style.display);
+        });
+
+        function showLoading(message) {
+            console.log('Showing loading:', message);
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('loadingText').textContent = message;
+        }
+
+        function hideLoading() {
+            console.log('Hiding loading');
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        async function startAnalysis() {
+            console.log('Starting analysis');
+            projectName = document.getElementById('projectName').value.trim();
+            const transcription = document.getElementById('transcription').value.trim();
+            const selectedModel = document.querySelector('input[name="aiModel"]:checked').value;
+
+            console.log('Project name:', projectName);
+            console.log('Selected model:', selectedModel);
+
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+
+            showLoading('Analyzing project requirements and creating structure...');
+            document.getElementById('initialForm').style.display = 'none';
+            document.getElementById('modelSelector').style.display = 'none';
+            document.getElementById('apiKeySection').style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        project_name: projectName, 
+                        transcription,
+                        model: selectedModel 
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displayAnalysis(data);
+                } else {
+                    alert(data.error || 'Error analyzing project');
+                    document.getElementById('initialForm').style.display = 'block';
+                    document.getElementById('modelSelector').style.display = 'block';
+                    document.getElementById('apiKeySection').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error analyzing project');
+                document.getElementById('initialForm').style.display = 'block';
+                document.getElementById('modelSelector').style.display = 'block';
+                document.getElementById('apiKeySection').style.display = 'block';
+            }
+
+            hideLoading();
+        }
+
+        function displayAnalysis(data) {
+            if (data.raw_response) {
+                // Display raw response for debugging
+                document.getElementById('projectType').innerHTML = `
+                    <div class="section-header">
+                        <strong>Raw AI Response:</strong>
+                        <pre style="white-space: pre-wrap; margin-top: 10px;">${data.raw_response}</pre>
+                    </div>`;
+
+                // Hide other sections
+                document.getElementById('relevantSections').style.display = 'none';
+                document.getElementById('questions').style.display = 'none';
+            } else {
+                // Display parsed JSON response
+                document.getElementById('projectType').innerHTML = `
+                    <div class="section-header">
+                        <strong>Project Type:</strong> ${data.project_type}
+                    </div>`;
+
+                document.getElementById('relevantSections').innerHTML = `
+                    <div class="section-header">
+                        <strong>Relevant Sections:</strong> ${data.relevant_sections.join(', ')}
+                    </div>`;
+                document.getElementById('relevantSections').style.display = 'block';
+
+                const questionsHtml = data.initial_questions.map((q, index) => `
+                    <div class="question-container">
+                        <strong>Question ${index + 1}:</strong> ${q.question}
+                        <div class="why-needed">Why needed: ${q.why_needed}</div>
+                        <div class="answer-input">
+                            <textarea class="form-control" id="answer_${index}" data-section="${q.section}"></textarea>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('questions').innerHTML = questionsHtml;
+                document.getElementById('questions').style.display = 'block';
+            }
+            
+            // Show the analysis results container
+            document.getElementById('analysisResults').style.display = 'block';
+        }
+
+        async function submitAnswers() {
+            const answers = {};
+            document.querySelectorAll('[id^="answer_"]').forEach((textarea, index) => {
+                answers[index] = textarea.value.trim();
+            });
+            currentInfo = answers;
+
+            showLoading('Processing answers and generating follow-up questions...');
+            document.getElementById('analysisResults').style.display = 'none';
+
+            try {
+                const selectedModel = document.querySelector('input[name="aiModel"]:checked').value;
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_name: projectName,
+                        project_info: currentInfo,
+                        model: selectedModel
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    if (data.follow_up_questions && data.follow_up_questions.length > 0) {
+                        displayFollowUpQuestions(data.follow_up_questions);
+                    } else {
+                        displayScope(data.scope);
+                    }
+                } else {
+                    alert(data.error || 'Error processing answers');
+                    document.getElementById('analysisResults').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error processing answers');
+                document.getElementById('analysisResults').style.display = 'block';
+            }
+
+            hideLoading();
+        }
+
+        function displayFollowUpQuestions(questions) {
+            const questionsHtml = questions.map((q, index) => `
+                <div class="question-container">
+                    <strong>Question ${index + 1}:</strong> ${q.question}
+                    <div class="why-needed">Why needed: ${q.why_needed}</div>
+                    <div class="why-needed">Based on: ${q.based_on}</div>
+                    <div class="answer-input">
+                        <textarea class="form-control" id="followup_${index}" data-section="${q.section}"></textarea>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('followUpQuestionsContent').innerHTML = questionsHtml;
+            document.getElementById('followUpQuestions').style.display = 'block';
+        }
+
+        async function submitFollowUp() {
+            const answers = {};
+            document.querySelectorAll('.follow-up-answer').forEach(input => {
+                answers[input.id] = input.value.trim();
+            });
+            Object.assign(currentInfo, answers);
+
+            showLoading('Processing additional information...');
+            document.getElementById('followUpQuestions').style.display = 'none';
+
+            try {
+                const selectedModel = document.querySelector('input[name="aiModel"]:checked').value;
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        project_name: projectName,
+                        project_info: currentInfo,
+                        model: selectedModel
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    if (data.follow_up_questions && data.follow_up_questions.length > 0) {
+                        displayFollowUpQuestions(data.follow_up_questions);
+                    } else {
+                        displayScope(data.scope);
+                    }
+                } else {
+                    alert(data.error || 'Error processing additional information');
+                    document.getElementById('followUpQuestions').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error processing additional information');
+                document.getElementById('followUpQuestions').style.display = 'block';
+            }
+
+            hideLoading();
+        }
+
+        function displayScope(scope) {
+            document.getElementById('scopeContent').innerHTML = marked.parse(scope);
+            document.getElementById('generatedScope').style.display = 'block';
+        }
+
+        function editScope() {
+            const scopeContent = document.getElementById('scopeContent');
+            const editableScope = document.getElementById('editableScope');
+            const editButtons = document.getElementById('editButtons');
+
+            editableScope.value = scopeContent.textContent;
+            scopeContent.style.display = 'none';
+            editableScope.style.display = 'block';
+            editButtons.style.display = 'block';
+        }
+
+        function saveEdit() {
+            const scopeContent = document.getElementById('scopeContent');
+            const editableScope = document.getElementById('editableScope');
+            const editButtons = document.getElementById('editButtons');
+
+            scopeContent.textContent = editableScope.value;
+            editableScope.style.display = 'none';
+            editButtons.style.display = 'none';
+            scopeContent.style.display = 'block';
+        }
+
+        function cancelEdit() {
+            const scopeContent = document.getElementById('scopeContent');
+            const editableScope = document.getElementById('editableScope');
+            const editButtons = document.getElementById('editButtons');
+
+            editableScope.style.display = 'none';
+            editButtons.style.display = 'none';
+            scopeContent.style.display = 'block';
+        }
+
+        function copyScope() {
+            const scopeContent = document.getElementById('scopeContent').textContent;
+            navigator.clipboard.writeText(scopeContent)
+                .then(() => alert('Scope copied to clipboard!'))
+                .catch(err => console.error('Error copying text:', err));
+        }
+
+        function startOver() {
+            currentInfo = {};
+            projectName = '';
+            document.getElementById('projectName').value = '';
+            document.getElementById('transcription').value = '';
+            document.getElementById('initialForm').style.display = 'block';
+            document.getElementById('modelSelector').style.display = 'block';
+            document.getElementById('apiKeySection').style.display = 'block';
+            document.getElementById('analysisResults').style.display = 'none';
+            document.getElementById('followUpQuestions').style.display = 'none';
+            document.getElementById('generatedScope').style.display = 'none';
+        }
+
+        async function saveApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+
+            try {
+                const response = await fetch('/save_api_key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('API key saved successfully!');
+                    document.getElementById('apiKey').value = '';
+                } else {
+                    alert(data.error || 'Error saving API key');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving API key');
+            }
+        }
+    </script>
+</body>
+</html> 
