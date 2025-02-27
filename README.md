@@ -46,8 +46,6 @@ cp .env.example .env
 Edit `.env` and add your OpenRouter API key:
 ```
 OPENROUTER_API_KEY=your_api_key_here
-SITE_URL=http://localhost:5000
-SITE_NAME=Scope Creator AI
 ```
 
 ## Usage 🎯
@@ -118,16 +116,6 @@ Generated scope documents include:
    - Resource Assumptions
    - Implementation Assumptions
 
-## Contributing 🤝
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## Dependencies 📦
 
 - Python 3.8+
@@ -148,17 +136,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support 💬
 
-For support, please open an issue in the GitHub repository or contact the maintainers.
-
-## Roadmap 🗺️
-
-- [ ] Add support for multiple AI models
-- [ ] Implement document version control
-- [ ] Add export options (PDF, Word)
-- [ ] Create template management system
-- [ ] Add collaborative editing features
-- [ ] Implement real-time document preview
+For support, please open an issue in the GitHub repository or me at kai@kaios.ca.
 
 ---
 
-Made with ❤️ by [Your Name/Organization] 
+Made with ❤️ by Kai Stephens
