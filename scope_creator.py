@@ -34,8 +34,7 @@ class ScopeCreator:
                     model=model or self.model,  # Use provided model or fall back to default
                     messages=messages,
                     temperature=0.7,
-                    max_tokens=4000
-                )
+                    max_tokens=8000
                 
                 if not completion or not completion.choices:
                     raise ValueError("Empty response from API")
