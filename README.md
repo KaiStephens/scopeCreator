@@ -1,149 +1,113 @@
-# Scope Creator AI 🚀
+# Scope Creator
 
-A powerful AI-powered tool that generates comprehensive project scope documents from meeting transcriptions and project information. Built with Python and Flask, this tool leverages advanced language models to create detailed, well-structured scope documents that capture all critical project aspects.
+Scope Creator is an AI-powered application that helps you create comprehensive project scope documents. It uses advanced AI models to analyze your project information and generate detailed scope documents that can be edited, saved, and versioned.
 
-![Scope Creator Preview](preview.png)
+## Features
 
-## Features ✨
+- Create detailed scope documents from minimal project information
+- Save and version your scope documents
+- Edit and update scope documents with AI assistance
+- View version history and restore previous versions
+- Access your scope documents from anywhere
 
-- **Intelligent Project Analysis**: Automatically analyzes project information and identifies required details
-- **Dynamic Question Generation**: Creates targeted questions to gather missing critical information
-- **Three-Phase Scope Generation**:
-  1. Project Overview & Purpose
-  2. Dynamic Technical Sections
-  3. Critical Assumptions & Clarifications
-- **Smart Content Generation**: Only creates sections where sufficient information exists
-- **Comprehensive Documentation**: Generates detailed scope documents with:
-  - Project background and context
-  - Business value and success criteria
-  - Technical requirements and specifications
-  - Clear assumptions and potential misunderstandings
-- **Professional Formatting**: Consistent markdown formatting with proper section hierarchy
-- **AI Chat Editing Assistant**: Integrated AI chat using Deepseek r-1 model that can:
-  - Answer questions about the document
-  - Provide editing suggestions
-  - Make direct edits to the document based on user requests
-  - Extract structured JSON edit information from responses
-  - Apply changes to precise line ranges in the document
+## Prerequisites
 
-## Installation 🛠️
+Before setting up Scope Creator, make sure you have:
 
-1. Clone the repository:
-```bash
-git clone https://github.com/KaiStephens/scopeCreator.git
-cd scopeCreator
-```
-  b 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+1. Python 3.6 or higher installed
+2. An OpenRouter API key (get one at [https://openrouter.ai](https://openrouter.ai))
+
+## Setup
+
+### Automatic Setup (Recommended)
+
+#### On macOS/Linux:
+
+1. Open a terminal in the project directory
+2. Make the setup script executable:
+   ```
+   chmod +x setup.sh
+   ```
+3. Run the setup script:
+   ```
+   ./setup.sh
+   ```
+4. Follow the on-screen instructions
+
+#### On Windows:
+
+1. Open a command prompt in the project directory
+2. Run the setup script:
+   ```
+   setup.bat
+   ```
+3. Follow the on-screen instructions
+
+### Manual Setup
+
+If you prefer to set up the application manually:
+
+1. Create a virtual environment:
+   ```
+   python -m venv .venv
+   ```
+
+2. Activate the virtual environment:
+   - On Windows:
+     ```
+     .venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```
+     source .venv/bin/activate
+     ```
 
 3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+   ```
+   pip install -r requirements.txt
+   ```
 
-4. Set up environment variables:
-```bash
-cp .env.example .env
-```
-Edit `.env` and add your OpenRouter API key:
-```
-OPENROUTER_API_KEY=your_api_key_here
-```
+4. Create a `.env` file in the project root with your OpenRouter API key:
+   ```
+   OPENROUTER_API_KEY=your_api_key_here
+   ```
 
-## Usage 🎯
+## Running the Application
 
-1. Start the Flask server:
-```bash
-python app.py
-```
+1. Activate the virtual environment (if not already activated)
+2. Start the application:
+   ```
+   python app.py
+   ```
+3. Open your web browser and navigate to [http://localhost:5006](http://localhost:5006)
 
-2. Open your browser and navigate to `http://localhost:5000`
+## Usage
 
-3. Enter your project details:
-   - Project name
-   - Meeting transcription (if available)
-   - Answer any generated questions
+1. **Create a New Scope**:
+   - Enter your project name
+   - Optionally add meeting transcription
+   - Answer the AI-generated questions
+   - Generate the scope document
 
-4. Click "Generate Scope" to create your document
+2. **View Saved Scopes**:
+   - Click on "Saved Scopes" to see all your saved scope documents
+   - Open any scope to view its contents
 
-## API Reference 📚
+3. **Edit a Scope**:
+   - Click "Edit" on any scope
+   - Make changes and save them
+   - Use the AI assistant to help with specific edits
 
-### ScopeCreator Class
+4. **Version History**:
+   - Click "History" on any scope to see all versions
+   - View or restore previous versions as needed
 
-The main class that handles scope document generation.
+## Troubleshooting
 
-```python
-creator = ScopeCreator(model="google/gemini-2.0-pro-exp-02-05:free")
-```
+- If you encounter issues with the OpenRouter API, ensure your API key is correct and has sufficient credits
+- If the application fails to start, check that all dependencies are installed and the virtual environment is activated
+- For persistent issues, check the console output for error messages
 
-#### Methods
+## License
 
-- `analyze_project(project_name: str, transcription: Optional[str] = None) -> Dict`
-  - Analyzes project information and generates initial questions
-  - Returns project type, relevant sections, and required information
-
-- `get_follow_up_questions(project_name: str, current_info: Dict) -> List[Dict]`
-  - Generates follow-up questions based on current information
-  - Returns a list of questions with justifications
-
-- `generate_scope(project_name: str, project_info: Dict, model: str) -> Dict`
-  - Generates the complete scope document in three phases
-  - Returns formatted scope document
-
-## Document Structure 📄
-
-Generated scope documents include:
-
-1. **Project Overview** (500+ words)
-   - Project Background
-   - Context and History
-   - Goals and Objectives
-
-2. **Project Purpose** (750+ words)
-   - Business Value
-   - Project Drivers
-   - Success Criteria
-
-3. **Dynamic Technical Sections** (500+ words each)
-   - Requirements and Architecture
-   - User Interface
-   - Security
-   - Performance
-   - Integration
-   - And more based on available information
-
-4. **Critical Assumptions** (500+ words)
-   - Technical Assumptions
-   - Business Assumptions
-   - Resource Assumptions
-   - Implementation Assumptions
-
-## Dependencies 📦
-
-- Python 3.8+
-- Flask
-- OpenAI Python Client
-- python-dotenv
-- Other dependencies listed in `requirements.txt`
-
-## License 📝
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments 🙏
-
-- OpenRouter for providing the AI model API
-- Flask for the web framework
-- All contributors and users of this tool
-
-## Support 💬
-
-For support, please open an issue in the GitHub repository or me at kai@kaios.ca.
-
----
-
-Made with ❤️ by Kai Stephens
+[Specify your license here]
