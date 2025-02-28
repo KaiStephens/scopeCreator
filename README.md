@@ -1,5 +1,7 @@
 # Scope Creator
 
+![Scope Creator Preview](preview.png)
+
 Scope Creator is an AI-powered application that helps you create comprehensive project scope documents. It uses advanced AI models to analyze your project information and generate detailed scope documents that can be edited, saved, and versioned.
 
 ## Features
