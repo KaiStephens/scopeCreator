@@ -19,6 +19,12 @@ A powerful AI-powered tool that generates comprehensive project scope documents 
   - Technical requirements and specifications
   - Clear assumptions and potential misunderstandings
 - **Professional Formatting**: Consistent markdown formatting with proper section hierarchy
+- **AI Chat Editing Assistant**: Integrated AI chat using Deepseek r-1 model that can:
+  - Answer questions about the document
+  - Provide editing suggestions
+  - Make direct edits to the document based on user requests
+  - Extract structured JSON edit information from responses
+  - Apply changes to precise line ranges in the document
 
 ## Installation 🛠️
 

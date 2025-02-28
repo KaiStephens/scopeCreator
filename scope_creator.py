@@ -409,17 +409,31 @@ Minimum 500 words total for this section."""
             combined_scope = f"{initial_response}\n\n{middle_response}\n\n{assumptions_response}"
             formatted_scope = self._clean_and_format_scope(combined_scope)
             
-            # Save scope to JSON
+            # Generate a unique scope ID based on name and timestamp
+            timestamp = time.time()
+            formatted_time = time.strftime("%Y%m%d%H%M%S", time.localtime(timestamp))
+            scope_id = f"{project_name.replace(' ', '_').lower()}_{formatted_time}"
+            
+            # Save scope to JSON with version history
             scope_data = {
+                "id": scope_id,
                 "project_name": project_name,
                 "project_info": project_info,
-                "scope": formatted_scope
+                "scope": formatted_scope,
+                "date_created": timestamp,
+                "formatted_date": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp)),
+                "version_history": []  # Initialize empty version history
             }
+            
+            # Ensure the scopes directory exists
             os.makedirs("scopes", exist_ok=True)
-            with open(f"scopes/{project_name.replace(' ', '_')}.json", "w") as f:
+            
+            # Save the scope as a JSON file
+            file_path = os.path.join("scopes", f"{scope_id}.json")
+            with open(file_path, "w") as f:
                 json.dump(scope_data, f, indent=4)
-
-            return {"scope": formatted_scope}
+                
+            return {"scope": formatted_scope, "id": scope_id}
             
         except Exception as e:
             print(f"Error generating scope: {str(e)}")
@@ -463,9 +477,10 @@ Minimum 500 words total for this section."""
                     data = json.load(f)
                     # Extract just the data we need for listing
                     scopes.append({
-                        "id": file_path.stem,
+                        "id": data.get("id", "Unknown Scope"),
                         "project_name": data.get("project_name", "Unknown Project"),
-                        "date_created": file_path.stat().st_ctime,
+                        "date_created": data.get("date_created", 0),
+                        "formatted_date": data.get("formatted_date", "Unknown Date"),
                         "file_name": file_path.name
                     })
             except Exception as e:
@@ -490,7 +505,7 @@ Minimum 500 words total for this section."""
             return None
             
     def update_saved_scope(self, scope_id: str, updated_data: Dict) -> bool:
-        """Update a saved scope with edited data."""
+        """Update a saved scope with edited data and maintain version history."""
         file_path = Path(f"scopes/{scope_id}.json")
         
         if not file_path.exists():
@@ -501,6 +516,25 @@ Minimum 500 words total for this section."""
             with open(file_path, 'r') as f:
                 existing_data = json.load(f)
                 
+            # Create version history array if it doesn't exist
+            if "version_history" not in existing_data:
+                existing_data["version_history"] = []
+                
+            # Add current version to history before updating
+            current_timestamp = time.time()
+            current_version = {
+                "timestamp": current_timestamp,
+                "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current_timestamp)),
+                "project_name": existing_data.get("project_name", ""),
+                "scope": existing_data.get("scope", "")
+            }
+            
+            # Only add to history if content actually changed
+            latest_scope = existing_data.get("scope", "")
+            new_scope = updated_data.get("scope", "")
+            if latest_scope != new_scope or existing_data.get("project_name", "") != updated_data.get("project_name", ""):
+                existing_data["version_history"].append(current_version)
+            
             # Update with new data
             if "project_name" in updated_data:
                 existing_data["project_name"] = updated_data["project_name"]
@@ -516,4 +550,82 @@ Minimum 500 words total for this section."""
             return True
         except Exception as e:
             print(f"Error updating scope file {file_path}: {str(e)}")
+            return False
+            
+    def get_scope_history(self, scope_id: str) -> List[Dict]:
+        """Get the version history of a scope."""
+        file_path = Path(f"scopes/{scope_id}.json")
+        
+        if not file_path.exists():
+            return []
+            
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                
+            return data.get("version_history", [])
+        except Exception as e:
+            print(f"Error reading scope history {file_path}: {str(e)}")
+            return []
+            
+    def restore_scope_version(self, scope_id: str, version_timestamp: float) -> bool:
+        """Restore a scope to a previous version from history."""
+        file_path = Path(f"scopes/{scope_id}.json")
+        
+        if not file_path.exists():
+            return False
+            
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                
+            history = data.get("version_history", [])
+            
+            # Find the version with the matching timestamp
+            version_to_restore = None
+            for version in history:
+                if version.get("timestamp") == version_timestamp:
+                    version_to_restore = version
+                    break
+                    
+            if not version_to_restore:
+                return False
+                
+            # Create a new history entry for the current version before restoring
+            current_timestamp = time.time()
+            current_version = {
+                "timestamp": current_timestamp,
+                "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(current_timestamp)),
+                "project_name": data.get("project_name", ""),
+                "scope": data.get("scope", ""),
+                "is_restore_point": True,
+                "restored_from": version_timestamp
+            }
+            
+            # Add current version to history
+            history.append(current_version)
+            
+            # Restore the old version data
+            data["project_name"] = version_to_restore.get("project_name", data.get("project_name", ""))
+            data["scope"] = version_to_restore.get("scope", data.get("scope", ""))
+            
+            # Add restoration note
+            restore_note = {
+                "timestamp": time.time(),
+                "formatted_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "message": f"Restored to version from {version_to_restore.get('formatted_time')}"
+            }
+            
+            if "restoration_notes" not in data:
+                data["restoration_notes"] = []
+                
+            data["restoration_notes"].append(restore_note)
+            
+            # Write the updated data back
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=4)
+                
+            return True
+        except Exception as e:
+            print(f"Error restoring scope version {file_path}: {str(e)}")
             return False 

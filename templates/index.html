@@ -515,7 +515,7 @@
                     if (data.follow_up_questions && data.follow_up_questions.length > 0) {
                         displayFollowUpQuestions(data.follow_up_questions);
                     } else {
-                        displayScope(data.scope);
+                        displayScope(data.scope, data.scope_id);
                     }
                 } else {
                     alert(data.error || 'Error processing answers');
@@ -573,7 +573,7 @@
                     if (data.follow_up_questions && data.follow_up_questions.length > 0) {
                         displayFollowUpQuestions(data.follow_up_questions);
                     } else {
-                        displayScope(data.scope);
+                        displayScope(data.scope, data.scope_id);
                     }
                 } else {
                     alert(data.error || 'Error processing additional information');
@@ -588,8 +588,29 @@
             hideLoading();
         }
 
-        function displayScope(scope) {
+        function displayScope(scope, scope_id) {
+            // Update the scope content
             document.getElementById('scopeContent').innerHTML = marked.parse(scope);
+            
+            // Add a link to view/edit the saved scope if we have a scope_id
+            if (scope_id) {
+                const linkContainer = document.createElement('div');
+                linkContainer.className = 'mt-4 text-center';
+                linkContainer.innerHTML = `
+                    <p>Your scope document has been saved! You can access it later at:</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="/scope/${scope_id}" class="btn btn-primary" target="_blank">
+                            <i class="bi bi-eye"></i> View Scope
+                        </a>
+                        <a href="/scope/${scope_id}/edit" class="btn btn-success" target="_blank">
+                            <i class="bi bi-pencil"></i> Edit Scope
+                        </a>
+                    </div>
+                `;
+                document.getElementById('scopeContent').appendChild(linkContainer);
+            }
+            
+            // Show the scope container
             document.getElementById('generatedScope').style.display = 'block';
         }
 

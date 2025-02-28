@@ -1,8 +1,14 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from scope_creator import ScopeCreator
 import json
 import os
 import datetime
+import requests
+from dotenv import load_dotenv
+import re
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 scope_creator = ScopeCreator()
@@ -69,9 +75,15 @@ def generate():
             return jsonify({"error": "Project name is required"}), 400
 
         # Generate the scope document
-        scope = scope_creator.generate_scope(project_name, project_info, model)
+        result = scope_creator.generate_scope(project_name, project_info, model)
         
-        return jsonify(scope)
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 500
+            
+        return jsonify({
+            "scope": result["scope"],
+            "scope_id": result["id"]
+        })
 
     except Exception as e:
         print(f"Error in generate: {str(e)}")
@@ -203,7 +215,21 @@ def list_scopes():
 @app.route('/scope/<scope_id>')
 def view_scope(scope_id):
     """View a specific scope."""
+    # Try to get the scope directly first
     scope_data = scope_creator.get_saved_scope(scope_id)
+    
+    # If not found, try to find a match among available scopes
+    if not scope_data:
+        # Get all scopes and check if any filename contains our scope_id
+        all_scopes = scope_creator.list_saved_scopes()
+        for scope in all_scopes:
+            if scope_id in scope.get("id", ""):
+                # Found a potential match, try with this ID instead
+                print(f"Original scope_id '{scope_id}' not found, using '{scope['id']}' instead")
+                scope_data = scope_creator.get_saved_scope(scope["id"])
+                if scope_data:
+                    # Redirect to the correct URL with the actual ID
+                    return redirect(url_for('view_scope', scope_id=scope["id"]))
     
     if not scope_data:
         return render_template('error.html', message="Scope not found"), 404
@@ -213,7 +239,21 @@ def view_scope(scope_id):
 @app.route('/scope/<scope_id>/edit')
 def edit_scope(scope_id):
     """Edit a specific scope."""
+    # Try to get the scope directly first
     scope_data = scope_creator.get_saved_scope(scope_id)
+    
+    # If not found, try to find a match among available scopes
+    if not scope_data:
+        # Get all scopes and check if any filename contains our scope_id
+        all_scopes = scope_creator.list_saved_scopes()
+        for scope in all_scopes:
+            if scope_id in scope.get("id", ""):
+                # Found a potential match, try with this ID instead
+                print(f"Original scope_id '{scope_id}' not found, using '{scope['id']}' instead")
+                scope_data = scope_creator.get_saved_scope(scope["id"])
+                if scope_data:
+                    # Redirect to the correct URL with the actual ID
+                    return redirect(url_for('edit_scope', scope_id=scope["id"]))
     
     if not scope_data:
         return render_template('error.html', message="Scope not found"), 404
@@ -233,6 +273,177 @@ def update_scope(scope_id):
         return jsonify({"message": "Scope updated successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/scope/<scope_id>/history')
+def scope_history(scope_id):
+    """View the version history of a scope."""
+    scope_data = scope_creator.get_saved_scope(scope_id)
+    history = scope_creator.get_scope_history(scope_id)
+    
+    if not scope_data:
+        return render_template('error.html', message="Scope not found"), 404
+        
+    return render_template('scope_history.html', scope=scope_data, scope_id=scope_id, history=history)
+
+@app.route('/scope/<scope_id>/version/<timestamp>')
+def view_scope_version(scope_id, timestamp):
+    """View a specific version of a scope."""
+    scope_data = scope_creator.get_saved_scope(scope_id)
+    history = scope_creator.get_scope_history(scope_id)
+    
+    if not scope_data or not history:
+        return render_template('error.html', message="Scope or history not found"), 404
+    
+    # Find the requested version
+    timestamp = float(timestamp)
+    version = None
+    for v in history:
+        if v.get("timestamp") == timestamp:
+            version = v
+            break
+    
+    if not version:
+        return render_template('error.html', message="Version not found"), 404
+        
+    return render_template('view_scope_version.html', scope=scope_data, scope_id=scope_id, 
+                          version=version, current_timestamp=timestamp)
+
+@app.route('/scope/<scope_id>/restore/<timestamp>', methods=['POST'])
+def restore_scope_version(scope_id, timestamp):
+    """Restore a scope to a previous version."""
+    try:
+        timestamp = float(timestamp)
+        success = scope_creator.restore_scope_version(scope_id, timestamp)
+        
+        if not success:
+            return jsonify({"error": "Failed to restore version"}), 500
+            
+        return jsonify({"message": "Version restored successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/ai_chat', methods=['POST'])
+def ai_chat():
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '')
+        document_content = data.get('document_content', '')
+        project_name = data.get('project_name', '')
+        scope_id = data.get('scope_id', '')
+        
+        if not user_message or not document_content:
+            return jsonify({"error": "Message and document content are required"}), 400
+            
+        # Add line numbers to document content for precise referencing
+        content_lines = document_content.split('\n')
+        numbered_content = ""
+        for i, line in enumerate(content_lines, 1):
+            numbered_content += f"{i:04d}: {line}\n"
+            
+        # Prepare the prompt for the AI model
+        prompt = f"""You are an AI assistant helping a user edit their document. Your task is to provide suggestions, improvements, or edits based on the user's request.
+
+Document Context (Project: {project_name}):
+The document below includes line numbers at the start of each line in the format "NNNN: " where NNNN is the line number.
+```
+{numbered_content}
+```
+
+User Request: {user_message}
+
+When providing edits, follow this format:
+1. First, give a helpful explanation of what you're going to do
+2. Then, if you want to edit a specific part of the document, output a JSON block enclosed in ```json and ``` tags with:
+   - start_line: the first line number to replace (use the exact line number shown at the beginning of the line)
+   - end_line: the last line number to replace (use the exact line number shown at the beginning of the line)
+   - new_text: the complete text that should replace the content between start_line and end_line (do NOT include line numbers in your new text)
+
+For example:
+"I'll help improve the Executive Summary by adding more detail about the project goals.
+
+```json
+{{
+  "start_line": 5,
+  "end_line": 10,
+  "new_text": "# Executive Summary\\n\\nThis project aims to develop a comprehensive solution that addresses...\\n\\nThe key objectives include..."
+}}
+```"
+
+IMPORTANT:
+- Be extremely precise with line numbers - use the line numbers shown at the beginning of each line (0001, 0002, etc.)
+- Make sure your start_line and end_line values correspond to actual line numbers in the document
+- Do not include the line number prefixes in your new_text - just provide the content that should replace the specified lines
+- Only use the JSON format when you need to make specific text edits
+
+Only use the JSON format when you need to make specific text edits. For general advice or when answering questions, just provide the explanation without the JSON.
+"""
+        
+        # Call the Deepseek r-1 model through OpenRouter API
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            return jsonify({"error": "OpenRouter API key not found. Please set it in your .env file."}), 500
+            
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": request.headers.get('Host', 'localhost')  # Optional
+        }
+        
+        payload = {
+            "model": "google/gemini-2.0-pro-exp-02-05:free",
+            "messages": [
+                {"role": "system", "content": "You are a helpful AI assistant specialized in document editing. You're careful about line numbers and precise editing."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.5,  # Lower temperature for more precise output
+            "max_tokens": 1500
+        }
+        
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload
+        )
+        
+        if response.status_code != 200:
+            return jsonify({"error": f"Error from AI service: {response.text}"}), 500
+
+        ai_response = response.json()
+        ai_message = ai_response['choices'][0]['message']['content']
+        
+        # Extract JSON if present
+        edit_data = None
+        json_match = re.search(r'```json\s*(.*?)\s*```', ai_message, re.DOTALL)
+        
+        if json_match:
+            try:
+                json_str = json_match.group(1)
+                edit_data = json.loads(json_str)
+                
+                # Validate line numbers to ensure they are within bounds
+                if edit_data.get('start_line') and edit_data.get('end_line'):
+                    start_line = int(edit_data['start_line'])
+                    end_line = int(edit_data['end_line'])
+                    
+                    if start_line < 1 or end_line > len(content_lines) or start_line > end_line:
+                        print(f"Invalid line range: {start_line}-{end_line}, document has {len(content_lines)} lines")
+                        edit_data = None
+                        ai_message += "\n\nNote: I suggested an edit with invalid line numbers. Please provide more specific instructions about which section you'd like to edit."
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON: {e}")
+                # We'll still return the message even if JSON parsing fails
+            except (ValueError, TypeError) as e:
+                print(f"Error processing line numbers: {e}")
+                edit_data = None
+        
+        return jsonify({
+            "message": ai_message,
+            "edit": edit_data
+        })
+        
+    except Exception as e:
+        print(f"Error in AI chat: {str(e)}")
+        return jsonify({"error": f"Error processing request: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5006) 
