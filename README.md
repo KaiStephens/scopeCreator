@@ -107,7 +107,3 @@ If you prefer to set up the application manually:
 - If you encounter issues with the OpenRouter API, ensure your API key is correct and has sufficient credits
 - If the application fails to start, check that all dependencies are installed and the virtual environment is activated
 - For persistent issues, check the console output for error messages
-
-## License
-
-[Specify your license here]
