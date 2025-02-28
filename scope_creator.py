@@ -628,4 +628,4 @@ Minimum 500 words total for this section."""
             return True
         except Exception as e:
             print(f"Error restoring scope version {file_path}: {str(e)}")
-            return False 
+            return False
