@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Scopes - Scope Creator AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1200px;
+            flex: 1;
+        }
+        .card {
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            background-color: white;
+            border: none;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .scope-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .scope-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            border-radius: 10px;
+            padding: 8px 20px;
+        }
+        .btn-outline-primary {
+            border-radius: 10px;
+            padding: 8px 20px;
+        }
+        .scope-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .no-scopes {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+            <h1>Saved Scopes</h1>
+            <a href="/" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Create New Scope
+            </a>
+        </div>
+        
+        {% if scopes and scopes|length > 0 %}
+            <div class="row">
+                {% for scope in scopes %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card scope-card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ scope.project_name }}</h5>
+                                <p class="card-text text-muted mb-3">
+                                    <i class="bi bi-calendar"></i> {{ scope.formatted_date }}
+                                </p>
+                                <div class="scope-actions mt-auto">
+                                    <a href="/scope/{{ scope.id }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="/scope/{{ scope.id }}/edit" class="btn btn-primary">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body no-scopes">
+                    <i class="bi bi-file-earmark-text fs-1 mb-3"></i>
+                    <h4>No Saved Scopes</h4>
+                    <p>You haven't created any scopes yet.</p>
+                    <a href="/" class="btn btn-primary">Create Your First Scope</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -19,7 +19,7 @@ class ScopeCreator:
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
             default_headers={
-                "HTTP-Referer": os.getenv("SITE_URL", "http://localhost:5000"),
+                "HTTP-Referer": os.getenv("SITE_URL", "http://localhost:5006"),
                 "X-Title": os.getenv("SITE_NAME", "Scope Creator AI")
             }
         )
@@ -410,6 +410,16 @@ Minimum 500 words total for this section."""
             combined_scope = f"{initial_response}\n\n{middle_response}\n\n{assumptions_response}"
             formatted_scope = self._clean_and_format_scope(combined_scope)
             
+            # Save scope to JSON
+            scope_data = {
+                "project_name": project_name,
+                "project_info": project_info,
+                "scope": formatted_scope
+            }
+            os.makedirs("scopes", exist_ok=True)
+            with open(f"scopes/{project_name.replace(' ', '_')}.json", "w") as f:
+                json.dump(scope_data, f, indent=4)
+
             return {"scope": formatted_scope}
             
         except Exception as e:
@@ -438,4 +448,73 @@ Minimum 500 words total for this section."""
             else:
                 formatted_lines.append(line)
         
-        return '\n'.join(formatted_lines).strip() 
+        return '\n'.join(formatted_lines).strip()
+        
+    def list_saved_scopes(self) -> List[Dict]:
+        """List all saved scopes with basic information."""
+        scopes = []
+        scopes_dir = Path("scopes")
+        
+        if not scopes_dir.exists():
+            return []
+            
+        for file_path in scopes_dir.glob("*.json"):
+            try:
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    # Extract just the data we need for listing
+                    scopes.append({
+                        "id": file_path.stem,
+                        "project_name": data.get("project_name", "Unknown Project"),
+                        "date_created": file_path.stat().st_ctime,
+                        "file_name": file_path.name
+                    })
+            except Exception as e:
+                print(f"Error reading scope file {file_path}: {str(e)}")
+                
+        # Sort by date created (newest first)
+        scopes.sort(key=lambda x: x["date_created"], reverse=True)
+        return scopes
+        
+    def get_saved_scope(self, scope_id: str) -> Optional[Dict]:
+        """Get a specific saved scope by ID."""
+        file_path = Path(f"scopes/{scope_id}.json")
+        
+        if not file_path.exists():
+            return None
+            
+        try:
+            with open(file_path, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading scope file {file_path}: {str(e)}")
+            return None
+            
+    def update_saved_scope(self, scope_id: str, updated_data: Dict) -> bool:
+        """Update a saved scope with edited data."""
+        file_path = Path(f"scopes/{scope_id}.json")
+        
+        if not file_path.exists():
+            return False
+            
+        try:
+            # Read existing data first to preserve structure
+            with open(file_path, 'r') as f:
+                existing_data = json.load(f)
+                
+            # Update with new data
+            if "project_name" in updated_data:
+                existing_data["project_name"] = updated_data["project_name"]
+            if "project_info" in updated_data:
+                existing_data["project_info"] = updated_data["project_info"]
+            if "scope" in updated_data:
+                existing_data["scope"] = updated_data["scope"]
+                
+            # Write the updated data back
+            with open(file_path, 'w') as f:
+                json.dump(existing_data, f, indent=4)
+                
+            return True
+        except Exception as e:
+            print(f"Error updating scope file {file_path}: {str(e)}")
+            return False 

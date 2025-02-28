@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit {{ scope.project_name }} - Scope Creator AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/theme/monokai.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/mode/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/addon/edit/closebrackets.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/addon/edit/matchbrackets.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.3/addon/display/placeholder.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container-fluid {
+            max-width: 1400px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            background-color: white;
+            border: none;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .btn-primary, .btn-success, .btn-outline-secondary, .btn-danger {
+            border-radius: 10px;
+            padding: 8px 20px;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .editor-container {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 200px);
+        }
+        .editor-sidebar {
+            width: 300px;
+            padding-right: 1rem;
+        }
+        .editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .editor-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .editor-toolbar button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            border-radius: 0.25rem;
+        }
+        .CodeMirror {
+            height: 100%;
+            min-height: 500px;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .preview-container {
+            display: none;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-top: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+            background-color: white;
+        }
+        .preview-container.active {
+            display: block;
+        }
+        .preview-content {
+            line-height: 1.7;
+        }
+        .preview-content h1, .preview-content h2, .preview-content h3, .preview-content h4 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .preview-content blockquote {
+            border-left: 4px solid #6c757d;
+            padding-left: 1rem;
+            color: #495057;
+            font-style: italic;
+            margin-left: 0;
+        }
+        .preview-content img {
+            max-width: 100%;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .section-tab {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .section-tab:hover {
+            background-color: #e9ecef;
+        }
+        .section-tab.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .editor-split {
+            display: flex;
+            flex: 1;
+            gap: 1rem;
+        }
+        .editor-pane, .preview-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-pane {
+            display: none;
+        }
+        .preview-pane.active {
+            display: flex;
+        }
+        .project-info-form {
+            margin-bottom: 1rem;
+        }
+        .spinner-border {
+            display: none;
+            margin-left: 0.5rem;
+        }
+        .status-message {
+            margin-left: 0.5rem;
+            display: none;
+        }
+        .status-message.success {
+            color: #198754;
+            display: inline;
+        }
+        .status-message.error {
+            color: #dc3545;
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="header-actions">
+            <h1>Edit Scope: {{ scope.project_name }}</h1>
+            <div class="header-buttons">
+                <a href="/scope/{{ scope_id }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-eye"></i> View
+                </a>
+                <a href="/scopes" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Scopes
+                </a>
+                <button id="saveButton" class="btn btn-success">
+                    <i class="bi bi-save"></i> Save Changes
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="status-message"></span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card" style="flex: 1; margin-bottom: 2rem;">
+            <div class="card-body d-flex flex-column" style="height: 100%">
+                <div class="editor-toolbar">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" title="Bold" onclick="insertMarkdown('**', '**')"><i class="bi bi-type-bold"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Italic" onclick="insertMarkdown('*', '*')"><i class="bi bi-type-italic"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Heading 1" onclick="insertMarkdown('# ', '')"><i class="bi bi-type-h1"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Heading 2" onclick="insertMarkdown('## ', '')"><i class="bi bi-type-h2"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Heading 3" onclick="insertMarkdown('### ', '')"><i class="bi bi-type-h3"></i></button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" title="Bullet List" onclick="insertMarkdown('- ', '')"><i class="bi bi-list-ul"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Numbered List" onclick="insertMarkdown('1. ', '')"><i class="bi bi-list-ol"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Blockquote" onclick="insertMarkdown('> ', '')"><i class="bi bi-blockquote-left"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Code" onclick="insertMarkdown('`', '`')"><i class="bi bi-code"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Link" onclick="insertMarkdown('[', '](url)')"><i class="bi bi-link"></i></button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" title="Table" onclick="insertTable()"><i class="bi bi-table"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Horizontal Rule" onclick="insertMarkdown('---\n', '')"><i class="bi bi-hr"></i></button>
+                        <button class="btn btn-sm btn-outline-primary toggle-preview-btn" title="Toggle Preview"><i class="bi bi-eye"></i> Preview</button>
+                    </div>
+                </div>
+                
+                <div class="editor-split">
+                    <div class="editor-pane">
+                        <div class="project-info-form">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="projectName" placeholder="Project Name" value="{{ scope.project_name }}">
+                                <label for="projectName">Project Name</label>
+                            </div>
+                        </div>
+                        <div id="editor" style="flex: 1;"></div>
+                    </div>
+                    <div class="preview-pane">
+                        <h5>Preview</h5>
+                        <div id="preview" class="preview-content" style="flex: 1; overflow-y: auto; padding: 1rem; border: 1px solid #dee2e6; border-radius: 5px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize CodeMirror editor
+        let editor;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize editor with markdown mode
+            editor = CodeMirror(document.getElementById('editor'), {
+                value: `{{ scope.scope|safe }}`,
+                mode: 'markdown',
+                theme: 'default',
+                lineNumbers: true,
+                lineWrapping: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                extraKeys: {"Enter": "newlineAndIndentContinueMarkdownList"},
+                placeholder: "Enter markdown content here..."
+            });
+            
+            // Handle preview toggle
+            const togglePreviewBtn = document.querySelector('.toggle-preview-btn');
+            const previewPane = document.querySelector('.preview-pane');
+            const editorPane = document.querySelector('.editor-pane');
+            
+            togglePreviewBtn.addEventListener('click', function() {
+                const isActive = previewPane.classList.contains('active');
+                
+                if (isActive) {
+                    previewPane.classList.remove('active');
+                    editorPane.style.flex = '1';
+                    this.innerHTML = '<i class="bi bi-eye"></i> Preview';
+                } else {
+                    // Update preview content
+                    const previewContent = document.getElementById('preview');
+                    previewContent.innerHTML = marked.parse(editor.getValue());
+                    
+                    // Show preview panel
+                    previewPane.classList.add('active');
+                    editorPane.style.flex = '1';
+                    this.innerHTML = '<i class="bi bi-eye-slash"></i> Hide Preview';
+                }
+            });
+            
+            // Save button
+            const saveButton = document.getElementById('saveButton');
+            const spinner = saveButton.querySelector('.spinner-border');
+            const statusMessage = saveButton.querySelector('.status-message');
+            
+            saveButton.addEventListener('click', async function() {
+                try {
+                    // Show spinner
+                    spinner.style.display = 'inline-block';
+                    statusMessage.textContent = '';
+                    statusMessage.classList.remove('success', 'error');
+                    
+                    const projectName = document.getElementById('projectName').value.trim();
+                    const scopeContent = editor.getValue();
+                    
+                    // Validate
+                    if (!projectName) {
+                        throw new Error('Project name is required');
+                    }
+                    
+                    // Data to update
+                    const data = {
+                        project_name: projectName,
+                        scope: scopeContent,
+                    };
+                    
+                    // Send data to server
+                    const response = await fetch(`/scope/{{ scope_id }}/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to save changes');
+                    }
+                    
+                    // Show success message
+                    statusMessage.textContent = 'Saved successfully!';
+                    statusMessage.classList.add('success');
+                    
+                    // Update document title
+                    document.title = `Edit ${projectName} - Scope Creator AI`;
+                    
+                } catch (error) {
+                    console.error('Error saving:', error);
+                    
+                    // Show error message
+                    statusMessage.textContent = error.message || 'Error saving changes';
+                    statusMessage.classList.add('error');
+                    
+                } finally {
+                    // Hide spinner
+                    spinner.style.display = 'none';
+                    
+                    // Auto-hide success message after 3 seconds
+                    if (statusMessage.classList.contains('success')) {
+                        setTimeout(() => {
+                            statusMessage.textContent = '';
+                            statusMessage.classList.remove('success');
+                        }, 3000);
+                    }
+                }
+            });
+        });
+        
+        // Helper functions for the markdown editor
+        function insertMarkdown(start, end) {
+            // Get selected text
+            const selection = editor.getSelection();
+            
+            // Replace selection with markdown
+            if (selection) {
+                editor.replaceSelection(start + selection + end);
+            } else {
+                // If no selection, insert tags and place cursor between them
+                const cursor = editor.getCursor();
+                editor.replaceRange(start + end, cursor);
+                
+                // Move cursor between tags
+                editor.setCursor({line: cursor.line, ch: cursor.ch + start.length});
+            }
+            
+            // Focus editor
+            editor.focus();
+        }
+        
+        function insertTable() {
+            const tableTemplate = `
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
+            `.trim();
+            
+            const cursor = editor.getCursor();
+            const emptyLine = editor.getLine(cursor.line).trim() === '';
+            
+            if (!emptyLine) {
+                editor.replaceRange('\n\n' + tableTemplate + '\n\n', cursor);
+            } else {
+                editor.replaceRange(tableTemplate + '\n\n', cursor);
+            }
+            
+            editor.focus();
+        }
+    </script>
+</body>
+</html> 

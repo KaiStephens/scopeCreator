@@ -27,7 +27,7 @@ A powerful AI-powered tool that generates comprehensive project scope documents 
 git clone https://github.com/KaiStephens/scopeCreator.git
 cd scopeCreator
 ```
-
+  b 
 2. Create a virtual environment:
 ```bash
 python -m venv venv

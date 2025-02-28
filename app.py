@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from scope_creator import ScopeCreator
 import json
 import os
+import datetime
 
 app = Flask(__name__)
 scope_creator = ScopeCreator()
@@ -186,5 +187,52 @@ def clean_and_format_scope(scope):
     
     return '\n'.join(formatted_lines).strip()
 
+@app.route('/scopes')
+def list_scopes():
+    """List all saved scopes."""
+    scopes = scope_creator.list_saved_scopes()
+    
+    # Format timestamps for display
+    for scope in scopes:
+        timestamp = scope.get("date_created")
+        if timestamp:
+            scope["formatted_date"] = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    
+    return render_template('scopes.html', scopes=scopes)
+
+@app.route('/scope/<scope_id>')
+def view_scope(scope_id):
+    """View a specific scope."""
+    scope_data = scope_creator.get_saved_scope(scope_id)
+    
+    if not scope_data:
+        return render_template('error.html', message="Scope not found"), 404
+        
+    return render_template('view_scope.html', scope=scope_data, scope_id=scope_id)
+
+@app.route('/scope/<scope_id>/edit')
+def edit_scope(scope_id):
+    """Edit a specific scope."""
+    scope_data = scope_creator.get_saved_scope(scope_id)
+    
+    if not scope_data:
+        return render_template('error.html', message="Scope not found"), 404
+        
+    return render_template('edit_scope.html', scope=scope_data, scope_id=scope_id)
+
+@app.route('/scope/<scope_id>/update', methods=['POST'])
+def update_scope(scope_id):
+    """Update a scope with edited data."""
+    try:
+        data = request.get_json()
+        success = scope_creator.update_saved_scope(scope_id, data)
+        
+        if not success:
+            return jsonify({"error": "Failed to update scope"}), 500
+            
+        return jsonify({"message": "Scope updated successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True, port=5006) 
