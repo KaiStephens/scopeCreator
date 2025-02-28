@@ -44,439 +44,46 @@ The scope should be:
 
 Here are some scopes that has been created as example for what the final scope should look like:
 
-Scope #1:
+Scope Example Format:
 
-Nebula Edge  
-Web Application Scope
-
- Project Purpose
-
-The purpose of this project is to build a web application that is accessible online and is based on the series of excel sheets that Nebula Edge uses to create their reporting. The web application will allow Nebula Edge to improve their efficiency when creating reports, as well allow for additional reporting to be created in the future as the data will be organized and stored in proper database structures. 
-
- Key Requirements  
-Login
-
-Users, in this initial case a single admin, will log in using their email address and their password. This user will be set up by a Falconberry developer. The login will require a password with at least 12 characters, one uppercase, one number, one lowercase and one special character. There will be a forgot password feature in case the user forgets their password. In this case a reset password link will be emailed to the user when the forgotten password is selected. The user's email must be in the system for this function to work.
-
-Two Factor Authentication (optional)
-
-Two Factor Authentication (2FA) provides an extra layer of security to user logins by leveraging a second authenticated account to authenticate by. By using the authentication of a user's email account, the login system can send a pin code to the email address that will need to be entered after attempting to log in to complete the authentication of the user with the system. 2FA will also record the user's IP address so that multiple 2FAs are not required on the same day. If the password attempted fails then the stored IP address will be removed and 2FA is required again. 
-
-User Management
-
-This section of the application will allow for the future management of users in the system as well as the addition of other administrators if required. A user or administrator will consist of a name, email address (which will also be used as a username) and password. There will only be one role in the system at this time, the administrator. Administrators will be able to fully administrate the system including adding a new administrator, delete an administrator (except for themselves) and edit administrator information including their passwords. To change a password, the existing password must be provided as a security measure. As well the user management will allow for toggling on or off two-factor authentication (2FA).
-
-Client Management
-
-This section will cover the following spreadsheets: Client Information Table, IPS (Investment Policy Statement) Risk Percent Classification Table, Client Account Table 
-
-The client refers to the person or business whose portfolio or portfolios are being reviewed and reported on. Client management feature will allow for the administration of data based on the client. The aspects of the client in which data will be added or modified are:
-The Client - the basic information about the client (name, contact, etc) i.e. the entity.
-Portfolio - A client can have multiple portfolios. Each portfolio will be composed of a series of IPS values and accounts.
-Portfolio IPS - This is the set of percentage values of what categories the client wants their assets in (equity, income, real, alternatives, other, cash). A portfolio can have multiple IPS records, each is associated with a date that the record should start at. For example, the client could have an IPS record for 2022 that is (35% equity, 5% income, 10% real, 10% alternatives, 10% other, 20% cash) and one for 2023 that is (50% equity, 5% income, 15% real, 0% alternatives, 0% other, 20% cash).
-Accounts - A client can have multiple accounts. Accounts are shared for all the clients portfolios. Each account record will hold the account information such as the account number and type and custodian information.
-
-Once a client has been set up there will be little need to go back and modify data unless there is new information for a specific client. 
-
-
-Security Management
-
-This section will cover the following spreadsheets: Master Security Table, Position History Table
-
-Securities is where the stocks, bonds, etc. information is held. An example of a security record could be AAPL. AAPL is the Apple stock. This section will hold the information about that stock like the name of the stock, company name, ISIN and other ID’s, asset level information, etc. Attached to the security will be a value history. The value history will store the price of the stock and the date for that price.
-Security Data Import
-
-There would be two types of data entry for this section of the system, manual and import. 
-
-Manual Entry - The administrator will be able to manually add a security record, browse through existing securities, view them and edit them. While viewing a security, the administrator will also be able to view, edit and add price history. 
-
-Import Securities Data - The import will be done using the CSV file exported from the Bloomberg terminal. The import will use a ISIN from each row in the CSV file as the unique identifier to update existing records. If the unique identifier does not exist, it will create a new security record. 
-
-Price History Import Function
-
-Import Security Value History - This feature will allow the Administrator to import values of securities for given dates. There will be two methods by which the administrator can import data.
-
-Import method one: Method one will allow for the upload of all value history of a single security, and only that security. This CSV will need a date and a price row for each date there is a value for. If the importer encounters a date that already exists in the database, this record will be skipped as historical price values should never change. 
-
-Import method two: Method two allows for the importing price value history for multiple securities. This CSV will need the date and price, but it will also need a unique identifier for the security. This import will also follow the rule that if an existing date is encountered for a security, then that record will not be imported. The unique identifier is TBD at this time and can be identified with the client during development.
-
-Both imports are specified at this time, however as the application progresses one import may be able to facilitate both operations. Ideally this operation is a single sheet import. In case this is not possible we will require multiple imports. 
-Deleting Securities
-
-Deleting a security will be an available function, however the security will not technically be deleted from the system. Deleting will have a similar effect to “hiding” the record as it is possible that a security could still be or may need to be in use by other parts of the system when hidden. A deleted security will not be able to be used for other features of the system, for example attaching it to an acquisition, but if a security is already attached to another record, it will still be connected and show as connected. 
-
-The price history records can be deleted as well and will follow the same “hiding” pattern as the security. The difference is, any price history that is deleted will not be used in other functions, i.e. reports.
-
-Things To Note
-
-A note on how price history will work in reports: When looking up the price of a security for a given date, the record with the lowest date closest or equal to the date being used will be the record that is used. For example if the current date you are looking up is Jan 10 2022, and there is a record for Jan 9 2022 and Jan 11 2022, the system will choose to use the record for Jan 9 2022. If no price is found for the security, it will default to 1. This will be used for the OTC securities where the quantity of the acquisition is actually the price.
-
-A note on OTC securities: OTC securities must be connected to a client account.
-
-Holding Management
-
-Holdings
-
-Holdings are securities that have been assigned to a clients portfolio. Administrators will be able to add holdings for a clients portfolio account in the web application. A holding is added by selecting the security record the client has acquisitioned. Once this connection has been made, the admin can then track the buying and selling of shares for that holding.
-
-Buying and Selling
-
-The administrator will be able to add amounts bought and sold for the holding. If the client bought 100 shares of a given security on Jan 1 2000, then the administrator can input an increase of 100 and date it Jan 1 2000. If the client sold 20 shares on Feb 1 2000, then the administrator can input a decrease of 20 on Feb 1 2000. The sum of all the increases and decreases of the holding will amount to the final amount held by the client. For OTC’s there might not be enough information to track increases and decreases so the system will ask for a current amount and it will calculate the difference from the last amount and log it as an increase or a decrease. For example, if the clients OTC has a current value of 1000 and a new value of 2000 is to be entered. The system will calculate the difference (will is +1000) and then add it as an increase of 1000 on the date entered for that change.
-
-Report
-
-Administrators will be able to view a report generated from a single client's portfolio. This report will match the existing Client Reporting spreadsheets in terms of the visible data that is shown on the report. Aside from being able to change the client portfolio to pull data from, the report date will also be a configurable value. The date will determine which holdings to bring into the report, and the value and price of those holdings.
-
-Once a report has been configured, the administrator will be able to export that report to a pdf. Using this feature will cause the browser to download a pdf version of the report.
-
- User Acceptance Criteria  
-Acceptance of a section or module:  
-Usage of system will be tested by Falconberry for normal use circumstances based on industry standard delivery expectations  
-The Client will review the system or portion of the system in a development environment provided by Falconberry as components are completed and become available  
-Once approved, the system or portions of the system will be considered complete  
-If unapproved, the client will provide documentation on why. If the issue found falls within the requirements of this scope Falconberry will implement change to correct as an issue. If the review reveals additional functionality not outlined as a requirement a change request will be submitted. The scope, budget, and timeline will be considered at that time.  
-Development will be iterative. Acceptance of a feature does not mean that the feature is fully completed. The feature may be modified further in future depending on client requests and priorities.
- Project Driving Factors - Client Determined  
-Establishes the order of priority for the project:  
-Current assumed as:
-
-Priority 1 High: Scope  
-Priority 2 Med: Budget  
-Priority 3 Low: Timeline
-
- Project Constraints  
-Schedule:  
-As a definite due date has not been stated, Falconberry does not currently recognize a schedule constraint.  
-Budget:  
-Falconberry does not currently recognize a budget constraint. However, original estimates were baselined at $50,000.00, therefore we will recognize that as the maximum project budget for the minimum viable product.  
-Resources:  
-Falconberry does not currently recognize a resource constraint.  
-Assumptions and or Questions  
-Falconberry is dependent on the CSVs provided by Nebula Edge for the import of data. Falconberry and Nebula Edge will have to work collectively to define how the sheets will be laid to import properly.  
-Falconberry assumes that base functionality has been defined in this scope document and that it is subject to change based on findings and client decisions throughout the development process. Additional development cycles may be required to achieve functions that are not yet defined.  
-Falconberry assumes that user experience and design will be implemented in its base format as determined by the developer and will be further expanded upon in a later version of the application.
-
-Project Team - Falconberry
-
-Project Team Role  
-Project Team Member(s)  
-Responsibilities  
-Project Manager  
-Oliver Grant  
-Project lead and main point of contact  
-Lead Developer  
-Ethan Reid  
-Programming  
-Lead Designer  
-Lydia Monroe  
-TBD (as needed/if required)
-
-Scope #2:
-
-Small Change  
-Fund  
-Wordpress Rebuild
-
-Aug 28, 2023
-
-Revision History
-
-Date  
-Revision  
-Author  
-Comment  
-2023-08-23  
-1  
-Falconberry  
-Initial document.  
-2024-02-05  
-2  
-Falconberry  
-Added Donation Customizations, Donation Receipt Delay, Partner Dashboard, Social Sharing, Google Analytics Donation Tracking
-
- Project Purpose  
-The primary objective of this project is to build a user-friendly, transparent, and efficient web platform for the Evergreen Impact Fund (EIF) that effectively meets its multifaceted fundraising needs. Through the implementation of various plugins, automation tools, and custom features, EIF aims to modernize its website to better manage donations, improve donor engagement, and streamline its internal processes for Evergreen Impact Fund and its partners.
-
- Key Requirements  
-1. Payment Gateway Integration.  
-The first requirement for the Evergreen Impact Fund's website build is to set up a payment gateway, specifically Stripe or Paypal. Stripe will be chosen as the primary payment gateway for the organization. To enable this, both payment gateways will be installed and configured on the website.  
-For the configuration process, the existing Stripe and Paypal accounts of the Evergreen Impact Fund will be utilized. This will involve setting up the necessary API keys and merchant accounts for each payment gateway. Additionally, to ensure a seamless transition from the current website to the new one, the existing website configurations will serve as a basis for the new website's configurations in terms of payment gateway settings.  
-The objective of this requirement is to incorporate the Stripe payment gateway as the primary option for accepting donations and to include Paypal as a secondary payment option, allowing donors to contribute more conveniently through various channels. By reusing the existing accounts and configurations, the process will be efficient and ensure that the new website supports all the established payment methods and settings.
-
-2. Donation Receipts  
-With the implementation of the PDF Receipts plugin, any donation made online through the Evergreen Impact Fund website will automatically trigger the generation of a PDF receipt. This receipt will serve as an official record of the donation, providing donors with the necessary documentation for their records and potential tax purposes.  
-Additionally, the Annual Receipts plugin will be employed to facilitate donor accessibility to their tax-deductible receipts. This functionality allows donors to conveniently download a PDF version of their yearly receipts. It ensures transparency and ease for donors who may require a comprehensive overview of their contributions throughout a given fiscal year.  
-It is important to note that when donations are manually created or imported into the system, the automated email receipt feature will not be enabled. This approach ensures consistency and prevents accidental duplicate receipts from being sent to donors.  
-We will use the existing PDF receipt as well as the manual receipt as a starting point for the new PDF receipt making sure to add the project the donation was for and the full date the donation was made.
-
-3. Offline Donations  
-In order to handle offline donations efficiently, Evergreen Impact Fund (EIF) will implement two methods. Firstly, the organization will utilize the Manual Donation plugin, which enables the creation of donations directly within the WordPress backend without the need for payment gateways or email receipts. This plugin will allow EIF staff to manually input offline donations, ensuring accurate and up-to-date records.  
-Secondly, EIF will employ the donation import feature to import offline donations from a CSV file into the system. This functionality simplifies the process by providing a user-friendly wizard interface, guiding EIF personnel through the necessary steps for importing donations effectively. By utilizing this import function, EIF can seamlessly incorporate offline donations into their WordPress and GiveWP platform, ensuring complete transparency in their fundraising efforts.
-
-4. Monthly Donations  
-Evergreen Impact Fund (EIF) seeks to enhance donation flexibility and foster long-term support for its causes. To accommodate this, the organization intends to leverage the Recurring Donations plugin in conjunction with the WordPress platform to enable donors to make monthly contributions. With this implementation, EIF’s supporters will have the option to select their desired donation period, providing them with greater control and the ability to commit to recurring donations that align with their personal preferences.  
-Through the Recurring Donations plugin, the EIF website will allow donors to easily customize their giving by selecting monthly donations as their preferred giving option. This feature holds the potential to significantly boost the organization's regular income, providing a consistent stream of funds that can be used to drive impactful change. By seamlessly integrating this functionality, EIF envisions an improved donor experience, enabling supporters to choose donation periods that align with their financial capacity and commitment level. This approach will empower donors to forge long-lasting relationships with EIF, contributing to sustainable funding for its projects and supporting its mission to bring about positive social and environmental change.
-
-5. Integration With Quickbooks Online  
-To streamline financial processes and ensure efficient management of financial data, Evergreen Impact Fund aims to integrate its WordPress website and GiveWP platform with QuickBooks. This integration will be achieved through the usage of Zapier, a robust automation tool that enables seamless data transfer between various applications.  
-Zapier will be configured to facilitate the synchronization of transactional information between GiveWP and QuickBooks. This includes the automatic creation of invoices, updating of customer records, and categorization of donations or contributions made through the website. By leveraging the power of Zapier, Evergreen Impact Fund will be able to maintain accurate and up-to-date financial records, avoiding the need for manual data entry and reducing the risk of errors.
-
-6. Anonymous Donations  
-The Evergreen Impact Fund requires the capability to accommodate anonymous donors within their website built on WordPress and utilizing the GiveWP plugin. With this functionality, any donor making a contribution will have the option to remain anonymous. Although the donor's information will still be collected for administrative purposes, it will not be displayed on the public website or associated with the donation. This ensures privacy and confidentiality for the donors who prefer to remain unidentified while supporting the Evergreen Impact Fund's initiatives.  
-To implement this feature, the development team will configure the GiveWP plugin accordingly. A checkbox or selection field will be added to the donation form, giving donors the choice to contribute anonymously. When selected, the system will collect the donor's information as usual but will suppress the public display of their name or any identifying details on the website. Partners and Evergreen Impact Fund will always have access to the donors data regardless of an anonymous donation.
-
-7. Extra Campaign Fields  
-To enhance the functionality of the Evergreen Impact Fund's WordPress website and GiveWP donation platform, we will incorporate the Advanced Custom Fields (ACF) plugin. This integration will enable us to create additional fields within the campaign post type, facilitating the storage of supplementary information obtained from spreadsheets. By leveraging ACF's capabilities, we can capture and save partner information directly on the campaign post type. Additionally, the plugin allows for the inclusion of files related to each campaign, ensuring easy access to supporting documents and resources.
-
-8. Crowdfunding Campaigns and Partners  
-The Evergreen Impact Fund will utilize the Peer-To-Peer plugin to facilitate its crowdfunding campaigns. This plugin will enable the organization to showcase campaign progress and donor lists on the respective campaign pages. To streamline the creation and management of crowdfunding campaigns, a custom feature will be developed using Ninja Forms. This feature will specifically cater to "Partners" users, granting them the ability to create and edit campaigns through a user-friendly interface. Additionally, Partner users will have access to a customized dashboard page, where they can conveniently export campaign data. This data export will encompass vital information such as donor lists, amounts raised, campaign balance, and other pertinent metrics, allowing Partners to effectively track and analyze the success of their campaigns.  
-These functionalities, enabled by the integration of GiveWP and the custom implementations, will amplify crowdfunding efforts and empower Partners to optimize their campaigns through data-driven decision-making.
-
-9. Optional Fee Collection On Checkout  
-Evergreen Impact Fund seeks to implement an optional fee collection feature on their website's checkout process. By utilizing the Fee Recovery plugin, this functionality will allow donors to voluntarily cover a percentage of their donation to help offset payment gateway and administrative costs. During the checkout phase, donors will be presented with the opportunity to participate in this fee collection, giving them the choice to contribute an additional amount.  
-Integrating this feature will provide Evergreen Impact Fund with a transparent way to address the expenses associated with payment gateways and administration. By offering donors the option to cover these costs, Evergreen Impact Fund can ensure that a higher proportion of each donation goes directly towards supporting their chosen causes and projects. The implementation of this plugin will streamline the fee collection process, simplifying the administration of these fees and allowing Evergreen Impact Fund to manage their resources more efficiently.
-
-10. Newsletter Integration  
-Evergreen Impact Fund (EIF) requires the implementation of newsletter integration within the GiveWP donation forms. Using the Mailchimp plugin, the donation forms should provide an option for donors to subscribe to a mailing list associated with the ongoing donation campaign. Two possible approaches for setting up this feature are recommended.  
-The first option involves utilizing a global mailing list that will be applicable to all donation forms. Donors will have the choice to opt-in for receiving newsletters at the time of submitting their donation. This global mailing list will consolidate all subscribers, allowing EIF to maintain a centralized and comprehensive database of contacts interested in receiving updates from the organization.  
-Alternatively, the second option permits the assignment of a specific mailing list for each individual donation form. This approach allows EIF to tailor the content of each mailing list to the specific campaign or cause associated with the form. By associating a distinct mailing list with each form, EIF can effectively target the right audience with personalized newsletters, ensuring engagement and relevance in their communication efforts.  
-In both cases, the Mailchimp plugin will be utilized to seamlessly integrate the newsletter subscription functionality into the donation forms. By providing donors with the option to subscribe while making their contributions, EIF can expand its reach and engagement, ensuring effective communication with its donor base.
-
-Donation Customizations  
-After making a donation, the donor should be presented with a thank you page that shows what project they have donated for. If the partner has selected to receive notifications after donations for their campaign then an email notification will be sent to the partners email address about the new donation.
-
-Donation Receipt Delay  
-Donation receipts will be delayed.  A thank you email will go out letting donors know that the donation has gone through and a note saying that the donation receipt will be sent out in 5-7 days.  
-EIF will have to manually trigger the receipt for the donation through wordpress.
-
-Partner Dashboard  
-Every campaign will have an associated dashboard. The dashboard will allow the partners to view important information about their campaign and will be a place to download important resources for the campaign. The dashboard will show the following:
-Campaign status - including amount donated, number of donors, days active and left.  
-Graph to show week over week donation amounts.  
-A list of the 5 most recent donors - date, who, amount  
-A list of the top 10 donors - date, who, amount  
-Downloads of the donors list - including all information provided by the donor, amounts, dates but no transaction data.  
-A separate page to show a full donor list with ability to click on a donor to see their information.  
-List of financial reports that have been provided by EIF.  
-List of stewardship reports with a download link and showing the number of days until required.  
-List of links to other pages: edit campaign, FAQ pages, resources pages, profile, etc.
-
-Things like the financial reports and stewardship downloads will be added by EIF admins to the campaign. For the financial reports, the importer can read the date from the report and create a new report entry for the dashboard and show the date the report covers.
-
-Social Sharing  
-We will have share buttons on campaign pages to allow visitors to share the pages through their social media accounts.
-
-Google Analytics Donation Tracking  
-WP Give Google Analytics will be installed to send tracking information to the EIF Google Analytics account.
-
- User Acceptance Criteria  
-The system's usage will undergo quality testing by Falconberry to ensure its functionality under normal use circumstances, aligning with industry-standard delivery expectations. The Client will actively participate in the review process, evaluating the system or specific portions of it in a development environment provided by Falconberry. As components are completed and become available, the Client will have the opportunity to approve or request changes.
-
-Upon approval, the designated system or its corresponding portions will be considered complete. In the case of disapproval, the Client will provide comprehensive documentation outlining the reasons. If the identified issues fall within the defined scope of the project, Falconberry will address and correct them promptly as part of the issue resolution process.
-
-During the review process, if additional functionality emerges that was not explicitly outlined as a requirement, a change request will be initiated. This request will include a thorough assessment of the scope, budget, and timeline impact, which will be taken into consideration at that time.
-
-It's important to note that the development process will be iterative, and the acceptance of a feature does not imply its finality. Depending on client requests and priorities, further modifications may be made to the feature in the future to enhance its effectiveness and meet evolving needs.
- Project Driving Factors - Client Determined  
-Establishes the order of priority for the project:  
-Current assumed as:
-
-Priority 1 High: Scope  
-Priority 2 Med: Budget  
-Priority 3 Low: Timeline
-
- Project Constraints  
-Schedule:  
-As a definite due date has not been stated, Falconberry does not currently recognize a schedule constraint.  
-Budget:  
-Falconberry does not currently recognize a budget constraint. However, estimates for website and custom development were estimated between $35,000 - $45,000 when discussing scope initially.  
-Resources:  
-Falconberry does not currently recognize a resource constraint.  
-Assumptions and or Questions  
-The optional fee collection on checkout will not be considered a donation and therefore will not have a donation receipt. If it is required to be a donation, a campaign would have to be set up for Evergreen Impact Fund.  
-All the donor and donation information from the current Evergreen Impact Fund website will not be transferred within this scope.  
-It is assumed that the website will be in English.  
-Configuration data from plugins of the current website will be moved over to the new website and used as the baseline configuration. 
-
-Project Team - Falconberry
-
-Project Team Role  
-Project Team Member(s)  
-Responsibilities  
-Project Manager  
-Oliver Grant  
-Project lead and main point of contact  
-Lead Developer  
-Ethan Reid  
-Programming  
-Lead Designer  
-Lydia Monroe  
-TBD (as needed/if required)
-
-Scope #3:
-
-Lexicon Bridge Q3 - English Learning Game
+Technolinks
+Q3 - English Learning Game
 
 November 2023
 
-Revision History
-
-Date  
-Revision  
-Author  
-Comment  
-2023-10-16  
-1  
-Falconberry  
-Initial document.  
-2023-10-27  
-2  
-Falconberry  
-Updated the following sections: Word Prediction Control, Clues and Chronicle  
-2023-11-10  
-3  
-Falconberry  
-Added administrative requirements.  
-2023-11-24  
-4  
-Falconberry  
-Reduction of requirements.  
-2023-12-14
-
-Falconberry  
-Scope Finalized
-
- Project Purpose  
+## Project Purpose
 This scope document defines how the designed and prototyped game screens will function as well as defines the administrative functions required to manage it.
- Game Screen Requirements  
-Game Screen  
-The game screen will consist of several components: GoPOP!, game board, word prediction control, Clues, chronicle, and HUD (Heads Up Display).  The optimal game screen size will be set at 1024x768 pixels and will not change. When viewed on a screen size smaller than 1024x768, components may appear off the screen. When viewed on a screen size larger than 1024x768, components will remain in place, but the header and the footer will still be attached to the top and bottom of the screen respectively and empty space will appear above and below the game board.  The game board, GoPOP!, and clues will remain centred on the screen.
 
-Game Board  
-The game board is the area where correctly predicted words show up on the screen.  The game board will be 80 characters in width and 12 lines in height. This configuration allows for puzzles containing up to 960 characters (which includes all alpha-numerics, punctuation, and spaces) 
+## Requirements
+### Game Screen Requirements
+#### Game Screen
+The game screen will consist of several components: GoPOP!, game board, word prediction control, Clues, chronicle, and HUD (Heads Up Display). The optimal game screen size will be set at 1024x768 pixels and will not change. When viewed on a screen size smaller than 1024x768, components may appear off the screen. When viewed on a screen size larger than 1024x768, components will remain in place, but the header and the footer will still be attached to the top and bottom of the screen respectively and empty space will appear above and below the game board. The game board, GoPOP!, and clues will remain centred on the screen.
+
+#### Game Board
+The game board is the area where correctly predicted words show up on the screen. The game board will be 80 characters in width and 12 lines in height. This configuration allows for puzzles containing up to 960 characters (which includes all alpha-numerics, punctuation, and spaces).
 
 On a new game, the game board will initialize with only punctuation in the places it should be. Each character spot will be mono-spaced which will prevent the game board from shuffling/shifting words and punctuation around as words are added to it. As correct words are predicted, they will be added to the game board. If a word exists multiple times on the board, all instances of that word will be added.
 
-Word Prediction Control  
-The word prediction control is an input control that allows the user to enter word predictions. Input can be submitted either by clicking on the “Enter” button or by pressing the return / enter key on the keyboard. 
+#### Word Prediction Control
+The word prediction control is an input control that allows the user to enter word predictions. Input can be submitted either by clicking on the "Enter" button or by pressing the return / enter key on the keyboard.
 
-Validation will take place on any input entered.  Only single words will be allowed. Case will not be considered, if the word in the puzzle contains an uppercase letter, entering the lowercase letter will still work.
+Validation will take place on any input entered. Only single words will be allowed. Case will not be considered, if the word in the puzzle contains an uppercase letter, entering the lowercase letter will still work.
 
-In a case where a predicted word is not found in the puzzle, the system will review the words in the puzzle to determine if it begins with the predicted word. In a case where the word is not found, the predicted word will have its last letter removed and the system will perform the review again against the revised word. This process will continue until the word is less than four characters long. If the revised word is found, the user will be visually alerted. A message will also be displayed instructing the user about what to do next.
+### Administrative Requirements
+#### Login
+The login system will provide a secure way for users to authenticate themselves. All users will access the system through a login page, which requires an email address (used as the username) and a password. Logins will be performed securely over HTTPS.
 
-All words inputted, including incorrectly spelled words, will be stored as attempts for the puzzle for the user, this way the game will know all words which have been attempted.
+The password minimum requirement includes 12 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol. Passwords will be stored encrypted in the database using a specific industry-standard algorithm (For example, bcrypt).
 
-Inputted words that are on the puzzle will be added to the game board. The user will be prompted when an incorrect word is entered, or when an incorrect but close spelling is found.
-
-When the user has reached or surpassed 65% completion of the puzzle, a small animation will play and another animation will be played at 100% completion.
-GoPOP!  
-GoPOP! Is a component that when activated will provide the user with words or small sentences that can be used for inspiration to make predictions. GoPOP! can be toggled on or off by clicking on the button. However, the default state when the game begins will be on. Indication of GoPOP! being on or off will show on the button.
-
-When GoPOP! is turned on, words and short sentences (called hints) will slowly move down the screen. The odd-numbered hints will be angled 30 degrees down and even-numbered hints will be angled 30 degrees up. This is to simulate a river flowing. The hints will be fed from a managed list and will loop through the list for as long as GoPOP! is on.
-
-When GoPOP! is turned on, a timer will record the duration until GoPOP! is turned off. Each time GoPOP! is turned on the total time GoPOP! is left on will be accumulated.
-
-Clues  
-The clues button will open up a drop-down where the user can pick from a list of clues. Clues will be listed by type and there are 6 types of clues: Spoken, Written, Musical, Graphic, Sound, and Video.  Each type can have multiple clues. If there are no clues for that type, that type will not show up in the list. If there are no clues for the puzzle then the button will not show.
-
-Clicking on a clue type will pop open a modal window which will contain the clue. Depending on the type, the modal will have different controls. For spoken, musical and sound, the clue modal will be an audio player. For video, the modal will be a video player. For written and graphic, no player is needed and the modal will show the content. The modal will have a close button to close the modal. If the clue type has multiple clues, previous/next buttons will be provided to move between clues of that type.
-Chronicle  
-The chronicle will present the aggregate information from all the user’s game sessions of the puzzle. It will show the title of the puzzle and the number of words. It will show what session number the user is on and the start date and time of the puzzle and the start date and time of the current session. It will show how many predictions have been made this session, the list of words predicted, differentiating between correct words and incorrect words in chronological order, how much time has elapsed this session, and how much time has elapsed total for the puzzle.  It will show the score for the session and the total score for the puzzle. It will show how much time GoPOP! has been on for the session and how much total time it has been on. The chronicle will have a button to print the chronicle, and also a button to email the chronicle to a provided email address. The email button will only allow sending to one address and will only allow sending once every 5 minutes to avoid spam issues.
-HUD  
-The HUD will show the current total elapsed time for the puzzle and the current total completion, in percent, for the puzzle.
-Game Sessions  
-A game session is the quantitative data being stored during each play. The game session will be recorded from the time the puzzle is opened until the time the puzzle is exited, or the session is timed out. A game session's data will consist of a start time, which will be set to when the puzzle is started for the first time and a complete time which will be set to when the puzzle is completed.
-
-Game events will also be recorded under the game session.  A game event is a recorded action a player takes. Game events will record the time the event took place, the type, the session ID and a payload. When the user starts the puzzle, the system will create a session ID to identify the specific session for the user's play. 
-
-The types of game events are:
-GoPOP - the payload of this event will be either “on” or “off”.  This will show when GoPOP! was turned on or off and it will allow the system to calculate duration.
-Prediction - when the user submits a prediction, this event will save the time the word was entered, the word itself, as well as if it was found on the puzzle or not, or in the case of a misspelled word if it was a close match.
-Clue - when the user clicks on a clue type, this event will record the time the clue was requested and what type of clue.
-Start - this event will record when the puzzle session was started.
-Exit - this event will record when the puzzle session was exited, or when the session timed out.
-
-Should a second puzzle be started without exiting the first puzzle, the system will clean up the session data and create an exit event and turn off GoPOP! to clean up the data.
-
-Administrative Requirements  
-Login  
-The login system will provide a secure way for users to authenticate themselves. All users will access the system through a login page, which requires an email address (used as the username) and a password. Logins will be performed securely over HTTPS.  
-The password minimum requirement includes 12 characters with at least one uppercase letter, one lowercase letter, one number, and one symbol. Passwords will be stored encrypted in the database using a specific industry-standard algorithm (For example, bcrypt).  
-A 'Forgot Password' feature will allow users to recover their accounts when their login details are misplaced. When requested, the system will send an email to the registered email address with a secure, time-limited link to reset their password. Any request made through the 'Forgot Password' form will display the message "An email will be sent out if this email address is registered in our system," to avoid revealing whether an email address is associated with a user account.  
-A user's login session will remain active for 2 hours of inactivity. Any activity, such as browsing different pages or making system requests before the session expires, will reset this 2-hour timeout. Users will also have an option to manually log out, immediately ending their session.  
-The system will implement security measures to counteract multiple consecutive failed login attempts, limit the rate of login attempts, and mitigate brute force attacks.
-Dashboard  
+#### Dashboard
 The dashboard will be the first screen the player sees after logging in. Exiting a game session will return the player to the dashboard. Depending on the type of user logged in (super administrator or player), the menu and the body of the dashboard will show different information. A super administrator will have a player dashboard, plus some extra items in the menu.
-Player Dashboard  
-The dashboard will contain a menu with links to other sections available to the player, such as account settings and puzzle library (player accounts only). The menu will also include the logout button.
 
-The dashboard will also contain the list of puzzles the player has added to their own library (or added by a teacher or parent).  The list of puzzles will show the name of the puzzle, the total length of time spent on the puzzle, the number of words in the puzzle and total number of correctly guessed words, and a progress bar representing how much of the puzzle has been completed. Clicking on a puzzle name will begin a game session and take the player to the game screen.
-Starting A Puzzle  
-A player is a user who has registered with their email address. They will start and continue puzzles from their dashboard.
-Puzzle Library  
-The puzzle library will be a list of curated puzzles from which the player can choose to add to their personal library. The list of puzzles will be categorized with two taxonomies: Subject, and Grade Level. The player will be able to view all puzzles or select a category to view puzzles in. The list will show the puzzle name, number of words, how many players have played it, and how many players have completed it.
-
-Alongside the puzzle name will be a button to “Add” the puzzle to your own library. Puzzles that have already been added to the library will show a disabled button with “In Library”
-Puzzle Taxonomies  
-There will be 2 hard coded taxonomies in the system: Subject, and Grade Level. The tags for each of these taxonomies will also be hard coded and will be provided by the client.
-Account Settings  
-The account settings page will let the user change their profile information. They will be able to change their name, and their email.
-
-Email addresses will be validated on change to make sure they are a valid email address.
-Registration  
-Registration requires users to enter their full name (first name and available last name), a valid email address, and a password complying with the rules outlined in the Login System section. Email addresses must undergo a verification process to validate user authenticity.
-To verify an email address, users must access their respective email accounts and click on our system-generated, unique verification link sent during registration. This link will expire 24 hours from issuance. The verification email also contains the necessary instructions and a link to resend a new verification email if the initial link expires. The resending feature remains operational until the account's email address is fully verified, and the current link expires.
-Should a user attempt to log in without verifying their email address, they will be redirected to a page instructing them to verify their email or request to dispatch a new verification email from the system.
-After successful registration, all new users will initially have the 'Player' role. 
-Create Puzzle  
-The create puzzle screen will allow super administrators to create puzzles.  Creating a puzzle will require the user to fill out the puzzle title and the content of the puzzle. The title of the puzzle can be up to 80 characters long.  The content of the puzzle can be up to 960 characters long.  This is 12 lines with 80 characters per line, including spaces, punctuation and empty lines.
-
-The screen will also contain a component to add clues to the puzzle. To add a clue, the user simply selects the type of clue to add, then they would fill out the required fields. Should the clue be text-based, then a text field would be provided. For sound, images, and videos, an upload field is provided. After a clue is added, it can also be removed from the puzzle.
-
-The screen will also contain a component for categorization. The super administrators can select what tags under each category the puzzle belongs to. For example, the user could pick “Grade 2” as the tag under the Grade Level category.
-
-In order to prevent alteration of the puzzle after players have attempted it, the puzzle will have to be “Published” for it to be played.  Publishing a puzzle will create a version snapshot of the puzzle and that latest version will be available from the puzzle library.  When a player selects the puzzle to play, they will be locked to that version of the puzzle. If the puzzle is to be changed after, the player's puzzle will not be affected.
-
-User Management  
-The user management section will allow super administrators to manage users. They will be able to set roles on users (Convert to teacher or player, etc), update and view user information, disable and delete accounts, and help with login issues.
-Puzzle Approval Process  
-Puzzle creation will have an approval process workflow. When a puzzle is created by a super administrator and published, the puzzle will automatically be approved. Because only a super administrator can create a puzzle, this will be the only workflow of the puzzle approval process for the time being.
- User Acceptance Criteria  
-Acceptance of a section or module:  
-The website or web application will be tested by Falconberry for normal usage in accordance with industry-standard delivery expectations.  
-In 2-week intervals, the client will meet with the development team and review the system or portion of the system in a development environment provided by Falconberry.  
-As components are completed and functional for an end user they will made available to the client.  
-Once approved, the system or portion of the system will be considered complete.  
-If unapproved, the client will provide documentation on the reasons for rejection. If the issue found falls within the scope of this project, Falconberry will implement changes to correct the issue. If the review reveals additional functionality not outlined as a requirement, a change request will be submitted. The scope, budget, and timeline will be considered at that time.
-Expected Delivery Schedule  
-Sprints 1 through 3 - Game Development  
-Meeting 1 - Development progress update  
-Meeting 2 - Development progress update and implemented screens review  
-Meeting 3 - Game demonstration and presentation of a functional puzzle  
-Sprints 4 through 6 - Administrative Development and Revisions  
-Meeting 4 -  Development progress update: Login, Registration and User Management  
-Meeting 5 -  Development progress update: Dashboard and Account Settings  
-Meeting 6 -  Development progress update: Puzzle Creation and Library
- Project Driving Factors - Client Determined  
-Establishes the order of priority for the project:  
-Current assumed as:
-
-Priority 1 High: Timeline  
-Priority 2 Med: Budget  
-Priority 3 Low: Scope
- Project Constraints  
-Schedule:  
-As a definite due date has not been stated, Falconberry does not currently recognize a schedule constraint.  
-Budget:  
-Falconberry does not currently recognize a budget constraint.  
-Resources:  
-Falconberry does not currently recognize a resource constraint.  
-Assumptions  
-There is only 1 GoPOP! list of hints used for all puzzles.  
-The designs will be implemented for a screen size of 1024x768 pixels only.  
-Some functionality and layout in both the game and the administration of the web app may require deviation from the existing design to ensure compliance and proper function.  
-User requirements and functions will be subject to change throughout the development process if decisions on targeted users change.  
-The client will set up a Github account and repository and invite Falconberry to perform development within the repository. This will ensure that the ownership of the application resides with Lexicon Bridge throughout development. 
+## Assumptions
+1. There is only 1 GoPOP! list of hints used for all puzzles.
+2. The designs will be implemented for a screen size of 1024x768 pixels only.
+3. Some functionality and layout in both the game and the administration of the web app may require deviation from the existing design to ensure compliance and proper function.
+4. User requirements and functions will be subject to change throughout the development process if decisions on targeted users change.
+5. The client will set up a Github account and repository and invite Treefrog to perform development within the repository. This will ensure that the ownership of the application resides with Techolinks throughout development.
 
 Project Team - Falconberry
 

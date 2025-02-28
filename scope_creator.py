@@ -246,8 +246,8 @@ class ScopeCreator:
                 if key.isdigit() and value.strip() and key in question_mapping:
                     cleaned_info[question_mapping[key]] = value
 
-            # Phase 1: Initial Overview and Purpose
-            initial_prompt = f"""You are a professional scope document creator. Create the initial sections of a comprehensive scope document focusing ONLY on project overview, history, and purpose. Use the following information:
+            # Single comprehensive prompt for a consistent, structured scope document
+            scope_prompt = f"""You are a professional scope document creator. Create a comprehensive, DETAILED scope document (minimum 2000 words) following a specific structure with the following information:
 
 PROJECT DETAILS:
 Project Name: {project_name}
@@ -261,153 +261,85 @@ Questions and Answers:
 CONTEXT AND EXAMPLES:
 {context}
 
-REQUIRED SECTIONS:
-1. Project Name and Overview (500+ words)
-   - Project Background
-   - Detailed Context and History
-   - In-depth Overview of Goals and Objectives
+REQUIRED STRUCTURE:
+The scope document MUST follow this exact structure:
 
-2. Project Purpose (750+ words)
-   - Detailed Business Value and Justification
-   - Comprehensive Explanation of Project Drivers
-   - Detailed Success Criteria
+1. Project Name and Header
+   - Include project name at the top
+   - Current date (month and year)
+   - Optional revision history if applicable
+
+2. Project Purpose (200-300 words)
+   - Clear statement of what this project aims to accomplish
+   - Business justification and value
+   - Specific goals and objectives
+   - Success criteria where applicable
+
+3. Requirements (1500+ words)
+   - Break down into logical categories based on the project type
+   - Each requirement MUST be extremely detailed, clear, specific, and measurable
+   - Include specific technical details, measurements, and parameters where available
+   - Group related requirements together under appropriate subheadings
+   - Each category should have at least 3-5 specific requirements
+   - Use numbered lists for individual requirements
+   - Include multiple levels of hierarchy (sections, subsections, sub-subsections)
+
+4. Assumptions (300+ words)
+   - List at least 5-7 specific, project-relevant assumptions (numbered list)
+   - Base assumptions on the actual project details, NOT generic statements
+   - Focus on technical constraints, design limitations, and project-specific factors
+   - Include assumptions about tools, technologies, and implementation details
+   - Avoid generic assumptions like "client will provide requirements in a timely manner"
+   - Model your assumptions after the example provided, which are specific and technical
+
+DO NOT INCLUDE these sections (they are boilerplate that will be added separately):
+- User acceptance criteria
+- Expected delivery schedule
+- Project driving factors
+- Project constraints
 
 CRITICAL GUIDELINES:
-1. The meeting transcription and answered questions are your PRIMARY sources - use ALL details from them
-2. Each section MUST meet the minimum word counts specified
-3. Use specific measurements and technical details when available
-4. Include direct quotes using > blockquotes
-5. Never say "insufficient information" - use what's known or omit the section
-6. Use professional, technical language throughout
+1. The scope document MUST be extremely detailed (minimum 2000 words total)
+2. The meeting transcription and answered questions are your PRIMARY sources - use ALL details from them
+3. Be extremely specific and detailed - include exact measurements, parameters, and technical specifications
+4. Never say "insufficient information" - use what's known or make reasonable project-specific assumptions
+5. Format requirements in a hierarchical manner with detailed numbering and clear organization
+6. Focus on creating specific, implementable requirements that could be directly acted upon
+7. Requirements should be specific, measurable, achievable, relevant, and time-bound (SMART)
+8. Use detailed examples, scenarios, and use cases where appropriate
+9. When describing features or functionality, explain HOW they should work in detail
+
+QUALITY CHECKS:
+1. Is each section sufficiently detailed (especially Requirements at 1500+ words)?
+2. Are the assumptions specific to this project (not generic statements)?
+3. Are requirements organized hierarchically with proper numbering?
+4. Is the total document around 2000 words or more?
+5. Does each requirement include specific technical details when applicable?
 
 FORMATTING:
-1. Use ## for main section headers
-2. Use ### for subsections
-3. Use #### for sub-subsections
-4. Use bullet points for lists
-5. Use > for direct quotes
-6. Use bold for emphasis on key points"""
+1. Use Markdown formatting
+2. Use ## for main section headers
+3. Use ### for subsections
+4. Use #### for sub-subsections
+5. Use numbered lists for individual requirements (1., 2., 3., etc.)
+6. Use bullet points for descriptive lists
+7. Use bold for emphasis on key points
 
-            # Phase 2: Dynamic Middle Sections
-            middle_prompt = f"""Based on the available information, generate appropriate technical and functional sections for this scope document. Focus on what is KNOWN and create detailed sections only for aspects that have clear information or requirements.
+EXAMPLE FORMAT:
+Follow the structure and level of detail shown in the examples provided in the context. The requirements should be highly detailed with multiple subsections like the game screen requirements example, and assumptions should be specific and technical like in the example.
+"""
 
-PROJECT DETAILS:
-Project Name: {project_name}
-
-Meeting Transcription:
-{transcription if transcription else "No transcription provided"}
-
-Questions and Answers:
-{json.dumps(cleaned_info, indent=2) if cleaned_info else "No additional information provided"}
-
-CONTEXT AND EXAMPLES:
-{context}
-
-POTENTIAL SECTIONS (Create ONLY those that have sufficient information):
-- Technical Requirements and Architecture
-- User Interface Requirements
-- Security Requirements
-- Performance Requirements
-- User Management
-- Data Management
-- Integration Requirements
-- Testing Requirements
-- User Acceptance Criteria
-- Expected Delivery Schedule
-- Quality Assurance Plan
-- Maintenance and Support
-- Training Requirements
-- Documentation Requirements
-
-REQUIREMENTS FOR EACH SECTION:
-1. Minimum 500 words per section
-2. Must include specific technical details and measurements
-3. Must break down into clear subsections
-4. Must include examples and scenarios
-5. Must specify acceptance criteria where applicable
-
-CRITICAL GUIDELINES:
-1. Only create sections where you have concrete information
-2. Use specific technical details and measurements
-3. Include direct quotes from the transcription
-4. Break down requirements into clear, testable items
-5. Specify exact parameters and configurations
-
-FORMATTING:
-Same as previous sections, maintain consistent formatting throughout."""
-
-            # Phase 3: Critical Assumptions
-            assumptions_prompt = f"""Create a comprehensive list of critical assumptions for this project. These assumptions should clearly state any potential points of misunderstanding or ambiguity that could affect project success.
-
-PROJECT DETAILS:
-Project Name: {project_name}
-
-Meeting Transcription:
-{transcription if transcription else "No transcription provided"}
-
-Questions and Answers:
-{json.dumps(cleaned_info, indent=2) if cleaned_info else "No additional information provided"}
-
-CONTEXT AND EXAMPLES:
-{context}
-
-CRITICAL GUIDELINES:
-1. Each assumption must be specific and testable
-2. Focus on potential areas of misinterpretation
-3. Include technical, business, and resource assumptions
-4. Pay special attention to:
-   - Technical constraints and compatibility
-   - User expectations and requirements
-   - Resource availability and limitations
-   - Timeline and delivery expectations
-   - Integration points and dependencies
-   - Design and implementation flexibility
-   - Client responsibilities and involvement
-   - Testing and acceptance criteria
-   - Maintenance and support expectations
-
-FORMAT:
-## Critical Assumptions and Clarifications
-
-[List each assumption in clear, unambiguous language. Example format:]
-
-1. [Technical Assumption]: Clear statement about technical constraints or requirements
-2. [Business Assumption]: Clear statement about business processes or expectations
-3. [Resource Assumption]: Clear statement about resource availability or limitations
-4. [Implementation Assumption]: Clear statement about development approach or methodology
-
-Each assumption should be:
-- Specific and measurable where possible
-- Related to potential points of confusion
-- Important for project success
-- Written in clear, non-technical language when possible
-
-Minimum 500 words total for this section."""
-
-            # Execute each phase
-            messages_initial = [
-                {"role": "system", "content": "You are a professional scope writer focusing on project overview and purpose."},
-                {"role": "user", "content": initial_prompt}
+            # Execute the scope creation
+            messages = [
+                {"role": "system", "content": "You are a professional scope writer who creates detailed, structured scope documents."},
+                {"role": "user", "content": scope_prompt}
             ]
             
-            messages_middle = [
-                {"role": "system", "content": "You are a professional scope writer focusing on technical and functional requirements."},
-                {"role": "user", "content": middle_prompt}
-            ]
+            # Get response
+            scope_response = self._make_api_call(messages, model=model)
             
-            messages_assumptions = [
-                {"role": "system", "content": "You are a professional scope writer focusing on critical project assumptions."},
-                {"role": "user", "content": assumptions_prompt}
-            ]
-            
-            # Get responses for each phase
-            initial_response = self._make_api_call(messages_initial, model=model)
-            middle_response = self._make_api_call(messages_middle, model=model)
-            assumptions_response = self._make_api_call(messages_assumptions, model=model)
-            
-            # Combine and format all sections
-            combined_scope = f"{initial_response}\n\n{middle_response}\n\n{assumptions_response}"
-            formatted_scope = self._clean_and_format_scope(combined_scope)
+            # Format the scope
+            formatted_scope = self._clean_and_format_scope(scope_response)
             
             # Generate a unique scope ID based on name and timestamp
             timestamp = time.time()
@@ -454,12 +386,52 @@ Minimum 500 words total for this section."""
         # Ensure consistent heading formatting
         lines = scope.split('\n')
         formatted_lines = []
+        in_requirements = False
+        in_assumptions = False
+        
         for line in lines:
             # Ensure proper spacing for headings
             if line.strip().startswith('#'):
-                formatted_lines.append('\n' + line.strip())
+                # Add extra line break before main sections
+                if line.strip().startswith('## '):
+                    formatted_lines.append('\n' + line.strip())
+                    
+                    # Track when we enter important sections
+                    if 'Requirements' in line:
+                        in_requirements = True
+                        in_assumptions = False
+                    elif 'Assumptions' in line:
+                        in_requirements = False
+                        in_assumptions = True
+                    else:
+                        in_requirements = False
+                        in_assumptions = False
+                else:
+                    formatted_lines.append('\n' + line.strip())
+            
+            # Ensure proper formatting for numbered lists
+            elif in_requirements and (line.strip().startswith('1.') or line.strip().startswith('2.') or 
+                                     line.strip().startswith('3.') or line.strip().startswith('4.') or 
+                                     line.strip().startswith('5.')):
+                # Ensure proper spacing for requirement lists
+                if formatted_lines and formatted_lines[-1].strip() != '':
+                    formatted_lines.append('')  # Add blank line before list starts
+                formatted_lines.append(line)
+            
+            # Ensure proper formatting for assumptions
+            elif in_assumptions and (line.strip().startswith('1.') or line.strip().startswith('2.') or 
+                                     line.strip().startswith('3.') or line.strip().startswith('4.') or 
+                                     line.strip().startswith('5.')):
+                # Ensure proper spacing for assumptions list
+                if formatted_lines and formatted_lines[-1].strip() != '':
+                    formatted_lines.append('')  # Add blank line before list starts
+                formatted_lines.append(line)
             else:
                 formatted_lines.append(line)
+        
+        # Add word count as a comment at the bottom
+        total_words = len(' '.join(formatted_lines).split())
+        formatted_lines.append(f"\n\n<!-- Total word count: {total_words} words -->")
         
         return '\n'.join(formatted_lines).strip()
         
