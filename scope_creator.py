@@ -35,7 +35,7 @@ class ScopeCreator:
                     messages=messages,
                     temperature=0.7,
                     max_tokens=8000
-                
+                )
                 if not completion or not completion.choices:
                     raise ValueError("Empty response from API")
                     
