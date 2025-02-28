@@ -104,8 +104,4 @@ If you prefer to set up the application manually:
    - Click "History" on any scope to see all versions
    - View or restore previous versions as needed
 
-## Troubleshooting
-
-- If you encounter issues with the OpenRouter API, ensure your API key is correct and has sufficient credits
-- If the application fails to start, check that all dependencies are installed and the virtual environment is activated
-- For persistent issues, check the console output for error messages
+Contact: kai@kaios.ca for help/troubleshooting
